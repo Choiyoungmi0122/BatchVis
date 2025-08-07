@@ -313,7 +313,8 @@
                         <div style='margin-bottom:10px;'><strong>대시보드:</strong> <a href="${batchData.openai_dashboard_url}" target="_blank">OpenAI Batch 대시보드</a></div>
                     `;
                     loading.innerText = 'Batch 작업이 제출되었습니다. 2-4시간 후 결과 파일을 확인하세요.';
-                    document.getElementById('result').innerText = `Batch 작업 제출 완료! (${batchData.request_count}개 요청)`;
+                    // document.getElementById('result').innerText = `Batch 작업 제출 완료! (${batchData.request_count}개 요청)`;
+                    document.getElementById('result');
                 } else {
                     throw new Error(batchData.error || 'Batch 작업 제출 실패');
                 }
@@ -370,10 +371,12 @@
         const questionText = select.options[selectedQuestionIdx + 1]?.textContent;
         if (!questionText) return;
         
-        // 불러온 데이터에 이미 답변이 있는지 확인
+        // 현재 질문에 대한 답변이 이미 있는지 확인
         let hasExistingAnswers = false;
-        if (currentInstructions.length > 0 && currentInstructions[0].qa && currentInstructions[0].qa.length > 0) {
-            hasExistingAnswers = true;
+        if (currentInstructions.length > 0) {
+            hasExistingAnswers = currentInstructions.some(inst => 
+                inst.qa && inst.qa[selectedQuestionIdx] && inst.qa[selectedQuestionIdx].answer
+            );
         }
         
         // 답변 대기중 UI 미리 표시
@@ -392,7 +395,7 @@
             responseBox.className = 'response-box';
             
             // 이미 답변이 있으면 바로 표시
-            if (hasExistingAnswers && inst.qa && inst.qa[selectedQuestionIdx]) {
+            if (inst.qa && inst.qa[selectedQuestionIdx] && inst.qa[selectedQuestionIdx].answer) {
                 const qa = inst.qa[selectedQuestionIdx];
                 responseBox.innerHTML = `
                     <div style="font-size:13px; color:#888; margin-bottom:6px;">${inst.type?.toUpperCase() || 'UNKNOWN'} | ${detailStr}</div>
@@ -436,7 +439,7 @@
             document.getElementById('result').innerText = `오류 발생: ${err.message}`;
             return;
         }
-        // 답변 오면 UI 갱신
+        // 답변 오면 UI 갱신하고 currentInstructions에 저장
         const boxes = mainPanel.querySelectorAll('.response-box');
         data.answers.forEach((ans, idx) => {
             if (!boxes[idx]) return;
@@ -455,6 +458,14 @@
                 <p>${ans.answer || '답변 없음'}</p>
                 <button>선택</button>
             `;
+            
+            // currentInstructions에 답변 저장
+            if (currentInstructions[idx]) {
+                if (!currentInstructions[idx].qa) {
+                    currentInstructions[idx].qa = [];
+                }
+                currentInstructions[idx].qa[selectedQuestionIdx] = ans;
+            }
         });
     }
 
@@ -599,13 +610,13 @@
         </form>
         <div id="result"></div>
       </div>
-      
+
       <!-- sidebar를 아래로 이동 -->
       <div class="sidebar">
         <div class="display-area" id="displayArea">
             <div>실험을 시작하려면 "실험 시작" 버튼을 클릭하세요.</div>
         </div>
-        
+
         <div class="pagination" id="pagination" style="display: none;">
             <button onclick="prevPage()">&lt;</button>
             <span id="pageInfo">1 / 1</span>
