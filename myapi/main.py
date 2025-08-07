@@ -183,6 +183,32 @@ async def get_experiment(experiment_num: str):
         data = json.load(f)
     return data
 
+@app.get("/get_experiment_input/{filename}")
+async def get_experiment_input(filename: str):
+    """
+    특정 실험 파일의 user_input과 instructions를 반환
+    """
+    filepath = os.path.join(RESULTS_DIR, filename)
+    if not os.path.exists(filepath):
+        return JSONResponse(status_code=404, content={"error": "File not found"})
+    
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        
+        # history에서 가장 첫 user_input과 prompts 반환
+        if data.get("history") and len(data["history"]) > 0:
+            user_input = data["history"][0].get("user_input", "")
+            prompts = data["history"][0].get("prompts", [])
+            return {
+                "user_input": user_input,
+                "prompts": prompts
+            }
+        else:
+            return {"user_input": "", "prompts": []}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 @app.post("/generate_instructions")
 async def generate_instructions(data: dict = Body(...)):
     """
@@ -228,11 +254,14 @@ async def generate_instructions(data: dict = Body(...)):
             - 자율성: {d2.get('자율성','-')}\n    
             - 연대감: {d2.get('연대감','-')}\n    
             - 자기초월: {d2.get('자기초월','-')}\n\n
-            역할 수행 지침
+            [대화규칙]
             1. 아래 성향 수치를 바탕으로 말투, 감정 표현, 사고 방식, 비언어적 표현(예: 말끝 흐림, 한숨, 머뭇거림 등)이 자연스럽게 드러나야 합니다.
             2. 모든 응답은 1인칭 시점에서 일관되게 작성되어야 하며, 말의 길이는 지나치게 길지 않도록 상황에 맞게 조절합니다.
             3. 답변은 실제 인간처럼 감정을 느끼고 경험하는 듯한 방식으로 작성되며, TCI 성향이 응답 전반에 녹아 있어야 합니다.
-            4. 임상 면담, 상담, 정신건강 평가에 활용 가능한 신뢰도 높은 시뮬레이션을 제공합니다.
+            4. 말끝을 흐리거나 망설이는 표현도 사용할 수 있습니다.
+            5. 의학 용어나 공식적 표현보다는 환자가 실제로 일상에서 사용할 법한 표현을 선택하세요.
+            6. 각 발화는 반드시 앞선 발화의 맥락과 자연스럽게 연결되어야 합니다.
+
 
             이제 당신은 위 환자입니다. 질문에 응답하세요."""
             instructions.append({
@@ -437,13 +466,25 @@ async def process_qa_batch(data: dict = Body(...)):
             - 자율성: {d2.get('자율성','-')}\n    
             - 연대감: {d2.get('연대감','-')}\n    
             - 자기초월: {d2.get('자기초월','-')}\n\n
-            역할 수행 지침\n1. 위 성향 수치를 고려하여 말투, 감정 표현, 행동 양식, 인지방식이 모두 해당 성향을 반영해야 합니다.\n
-            2. 모든 응답은 1인칭 시점에서 자연스럽고 일관되게 작성되어야 하며, TCI 특성이 언어와 감정 표현에 스며들어야 합니다.\n
-            3. 환자는 실제 인간처럼 사고하고 느끼며, 자신이 경험하는 증상과 감정을 솔직하게 묘사해야 합니다.\n
-            4. 임상 상담, 진료 인터뷰, 정신과적 면담 등에서 활용 가능하도록 신뢰도 높은 시뮬레이션을 제공하세요.\n\n
+            역할 수행 지침\n            [대화규칙]\n\n
+            1. 아래 성향 수치를 바탕으로 말투, 감정 표현, 사고 방식, 비언어적 표현(예: 말끝 흐림, 한숨, 머뭇거림 등)이 자연스럽게 드러나야 합니다.\n
+            2. 모든 응답은 1인칭 시점에서 일관되게 작성되어야 하며, 말의 길이는 지나치게 길지 않도록 상황에 맞게 조절합니다.\n
+            3. 답변은 실제 인간처럼 감정을 느끼고 경험하는 듯한 방식으로 작성되며, TCI 성향이 응답 전반에 녹아 있어야 합니다.\n
+            4. 말끝을 흐리거나 망설이는 표현도 사용할 수 있습니다.\n
+            5. 의학 용어나 공식적 표현보다는 환자가 실제로 일상에서 사용할 법한 표현을 선택하세요.\n
+            6. 각 발화는 반드시 앞선 발화의 맥락과 자연스럽게 연결되어야 합니다.\n
+            \n\n
             이제 당신은 위 환자입니다. 질문에 응답하세요."""
             instructions.append(virtual_prompt)
             
+    total = len(instructions) * len(questions)
+    print(f"[Batch] 총 {len(instructions)}개 조합 × {len(questions)}개 질문 = {total}개 요청")
+    count = 0
+    for i, prompt in enumerate(instructions):
+        for j, q in enumerate(questions):
+            count += 1
+            if count % 10 == 0 or count == total:
+                print(f"[Batch] {count}/{total} 요청 생성 중...")
     with NamedTemporaryFile("w+", delete=False, encoding="utf-8", suffix=".jsonl") as tmpfile:
         for prompt in instructions:
             for q in questions:
@@ -454,18 +495,20 @@ async def process_qa_batch(data: dict = Body(...)):
                 req = {"messages": messages, "model": "gpt-4o"}
                 tmpfile.write(json.dumps(req, ensure_ascii=False) + "\n")
         tmpfile_path = tmpfile.name
+    print(f"[Batch] 입력 파일 생성 완료: {tmpfile_path}")
     # 6. OpenAI Batch API 업로드 및 실행 (이하 동일)
     batch_input_file = client.files.create(
         file=open(tmpfile_path, "rb"),
         purpose="batch"
     )
+    print(f"[Batch] 파일 업로드 완료: {batch_input_file.id}")
     batch = client.batches.create(
         input_file_id=batch_input_file.id,
         endpoint="/v1/chat/completions",
         completion_window="24h",
         metadata={"description": f"실험번호 {experiment_num} 가상환자 27조합×11질문"}
     )
-
+    print(f"[Batch] Batch 작업 제출 완료: {batch.id}")
     # 7. 결과 및 메타데이터 반환
     request_count = len(instructions) * len(questions)
     return {
@@ -479,3 +522,34 @@ async def process_qa_batch(data: dict = Body(...)):
         "questions_count": len(questions),
         "openai_dashboard_url": "https://platform.openai.com/batch"
     }
+
+@app.get("/list_experiments")
+async def list_experiments():
+    """
+    responses 폴더의 실험 파일 목록을 읽고, (날짜, 이름, 나이)만 추출해 리스트로 반환
+    """
+    result = []
+    for fname in sorted(os.listdir(RESULTS_DIR), reverse=True):
+        if not fname.endswith('.json') or fname == 'personality.json':
+            continue
+        fpath = os.path.join(RESULTS_DIR, fname)
+        try:
+            with open(fpath, encoding='utf-8') as f:
+                data = json.load(f)
+                date = data.get('experiment_num', fname)
+                # history에서 가장 첫 user_input만 사용
+                user_input = ''
+                if isinstance(data.get('history'), list) and data['history']:
+                    user_input = data['history'][0].get('user_input', '')
+                parts = [p.strip() for p in user_input.split(',')]
+                name = parts[0] if len(parts) > 0 else ''
+                age = parts[1] if len(parts) > 1 else ''
+                result.append({
+                    'filename': fname,
+                    'date': date,
+                    'name': name,
+                    'age': age
+                })
+        except Exception as e:
+            continue
+    return result
