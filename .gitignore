@@ -4,6 +4,20 @@
 *.pyd
 __pycache__/
 *.log
+*.egg-info/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Python 가상환경
+venv/
+env/
+batchpro/
+.venv/
+.conda/
 
 # Test/coverage
 .pytest_cache/
@@ -14,6 +28,9 @@ htmlcov/
 # IDE/Editor
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
 # DB/Local
 *.sqlite3
@@ -37,6 +54,21 @@ Thumbs.db
 # 민감/실험 데이터
 myapi/responses/
 myapi/frontend/static/
+myapi/frontend/static/questions.json
+myapi/frontend/static/personality.json
+myapi/frontend/static/personality_differences.json
+myapi/frontend/static/personality_differences_2.json
+myapi/frontend/saved_analyses/
+
+# 프로젝트 특화 파일들
+myapi/main_simple.py
+myapi/test_api.py
+myapi/main_copy.py
+myapi/main_ch+tem.py
+analyze_*.py
+test_*.py
+visualization/*.py
+visualization/*/__pycache__/
 
 # 기타
 *.bak
@@ -47,4 +79,6 @@ myapi/frontend/static/
 *.tar.gz
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log* 
+yarn-error.log*
+*.cache
+*.temp

@@ -1,0 +1,3481 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>페르소나 응답 시각적 분석</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 80%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #8E12D5, #6a0dad);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .control-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid #e9ecef;
+        }
+
+        .control-panel h3 {
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+
+        .control-group select, .control-group input {
+            padding: 10px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            min-width: 200px;
+            transition: border-color 0.3s ease;
+        }
+
+        .control-group select:focus, .control-group input:focus {
+            outline: none;
+            border-color: #8E12D5;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #8E12D5, #6a0dad);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: auto;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(142, 18, 213, 0.4);
+        }
+
+        .visualization-section {
+            margin-bottom: 40px;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-width: 0; /* flex 아이템이 축소되지 않도록 */
+        }
+
+        .section-title {
+            color: #000000;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #8E12D5, #6a0dad);
+            border-radius: 2px;
+        }
+
+        .chart-container {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        /* .radar-chart-container {
+            height: 500px;
+            position: relative;
+        }
+
+        .heatmap-container {
+            overflow-x: auto;
+        }
+
+        .heatmap-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .heatmap-table th, .heatmap-table td {
+            border: 1px solid #e9ecef;
+            padding: 12px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .heatmap-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .heatmap-table td {
+            position: relative;
+        }
+
+        .heatmap-cell {
+            padding: 8px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+        } */
+
+        /* 정렬 리스트 스타일 */
+        .sorting-list {
+            margin-top: 20px;
+        }
+
+        .sorting-list h4 {
+            color: #495057;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .sorting-items {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sorting-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .sorting-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .sorting-item.top-rank {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            border-color: #ffc107;
+        }
+
+        .sorting-item .rank {
+            background: #8E12D5;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .sorting-item .personality {
+            flex: 1;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .sorting-item .value {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            color: #8E12D5;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        /* 정보 박스 스타일 */
+        .info-box {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            color: #1976d2;
+            font-size: 18px;
+        }
+
+        .info-box strong {
+            color: #0d47a1;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+
+        /* 로딩 표시 스타일 */
+        .loading-indicator {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #8E12D5, #6a0dad);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(142, 18, 213, 0.3);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* 로딩 중일 때 차트 컨테이너 스타일 */
+        .chart-container.loading {
+            position: relative;
+            min-height: 200px;
+        }
+
+        .chart-container.loading::after {
+            content: '⏳ 분석 중...';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            color: #8E12D5;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        /* 정렬 리스트 스타일 */
+        .sorting-list {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .sorting-list h4 {
+            margin-top: 0;
+            color: #495057;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .sorting-items {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sorting-item {
+            display: flex;
+            align-items: center;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .sorting-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .sorting-item.top-rank {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            border: 2px solid #ffc107;
+        }
+
+        .sorting-item .rank {
+            background-color: #007bff;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .sorting-item.top-rank .rank {
+            background-color: #ff6b35;
+        }
+
+        .sorting-item .personality {
+            flex: 1;
+            font-weight: 500;
+            color: #333;
+        }
+
+        /* 클릭 가능한 페르소나 스타일 */
+        .clickable-persona {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 5px 10px;
+            border-radius: 6px;
+        }
+
+        .clickable-persona:hover {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            transform: scale(1.02);
+        }
+
+        .clickable-persona:active {
+            transform: scale(0.98);
+        }
+
+        .sorting-item .value {
+            background-color: #e9ecef;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #495057;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        /* 더보기 버튼 스타일 */
+        .show-more-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .show-more-btn:hover {
+            background-color: #0056b3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .show-more-btn:active {
+            transform: translateY(0);
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #bee5eb;
+            font-size: 18px;
+        }
+
+        /* 태그 하이라이트 스타일 */
+        .tag-highlight {
+            transition: all 0.3s ease;
+            cursor: help;
+        }
+
+        .tag-highlight:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        /* 태그별 색상 스타일 */
+        .tag-emotion {
+            background-color: #e3f2fd !important;
+            border-color: #2196f3 !important;
+        }
+
+        .tag-behavior {
+            background-color: #e8f5e8 !important;
+            border-color: #4caf50 !important;
+        }
+
+        .tag-relationship {
+            background-color: #fff3e0 !important;
+            border-color: #ff9800 !important;
+        }
+
+        .tag-expression {
+            background-color: #fce4ec !important;
+            border-color: #e91e63 !important;
+        }
+
+        @media (max-width: 768px) {
+            .control-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .control-group select, .control-group input {
+                min-width: auto;
+            }
+            
+            .analyze-btn {
+                margin-left: 0;
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="goBack()">← 뒤로가기</button>
+            <h1>페르소나 응답 시각화 분석</h1>
+            <p>의미 축에 따른 환자별 페르소나 차이 분석</p>
+        </div>
+
+        <div class="content">
+            <!-- 제어 패널 -->
+            <div class="control-panel">
+                <h3>분석 설정</h3>
+                <div class="control-row">
+                    <div class="control-group">
+                        <label for="experimentSelect">실험 선택</label>
+                        <select id="experimentSelect">
+                            <option value="">저장된 실험을 선택하세요</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="questionSelect">질문 선택</label>
+                        <select id="questionSelect">
+                            <option value="">질문을 선택하세요</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="dimensionSelect">의미 축 선택</label>
+                        <select id="dimensionSelect">
+                            <option value="">의미 축을 선택하세요</option>
+                        </select>
+                    </div>
+                    <!-- <div class="control-group">
+                        <label for="heatmapTypeSelect">히트맵 타입</label>
+                        <select id="heatmapTypeSelect">
+                            <option value="plotly">Plotly (인터랙티브)</option>
+                            <option value="seaborn">Seaborn (정적)</option>
+                        </select>
+                    </div> -->
+                    <button class="analyze-btn" onclick="startCompleteAnalysis()">통합 분석 시작</button>
+
+                </div>
+            </div>
+
+            <!-- 레이더 차트 섹션 -->
+            <!-- <div class="visualization-section">
+                <h3 class="section-title">레이더 차트 (Radar Chart)</h3>
+                <div class="chart-container">
+                    <div class="radar-chart-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+            </div> -->
+
+            <!-- 히트맵 섹션 -->
+            <!-- <div class="visualization-section">
+                <h3 class="section-title">히트맵 (Heatmap)</h3>
+                <div class="chart-container">
+                    <div class="heatmap-container">
+                        <div id="heatmapContent">
+                            <div class="info-box">
+                                <strong>히트맵 사용법:</strong> 질문과 의미 축을 선택한 후 분석을 시작하면, 
+                                페르소나별 응답을 색상 강도로 시각화하여 경향성을 한눈에 파악할 수 있습니다.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+
+            <!-- 축별 정렬 차트와 Side-by-Side 응답 비교를 나란히 표시 -->
+            <div style="display: flex; gap: 30px; margin-top: 30px;">
+                <!-- 축별 정렬 차트 섹션 -->
+                <div class="visualization-section" style="flex: 1;">
+                    <h3 class="section-title">
+                        축별 정렬 차트
+                        <span id="sortingChartLoading" class="loading-indicator" style="display: none;">⏳ 1단계: 시각화 생성 중...</span>
+                    </h3>
+                    <!-- <div class="chart-container">
+                        <div id="sortingContent">
+                            <div class="info-box">
+                                <strong>축별 정렬 차트 사용법:</strong> 의미 축을 선택하면 해당 축에 따라 
+                                페르소나들을 정렬하여 막대 차트로 보여줍니다. "자기주도성이 높은 순", "감정 강도가 낮은 순" 등으로 확인할 수 있습니다.
+                            </div>
+                        </div>
+                    </div> -->
+                </div>
+
+                                <!-- Side-by-Side Diff 비교 섹션 -->
+                <div id="diffSection" class="visualization-section" style="display: block; flex: 1;">
+                    <h3 class="section-title">
+                        Side-by-Side 응답 비교
+                    </h3>
+            
+            <!-- 페르소나 선택 -->
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center;">
+                        <label for="personaA" style="font-size: 18px; font-weight: bold; margin-right: 10px;">페르소나 A:</label>
+                        <select id="personaA" style="padding: 10px; font-size: 16px; min-width: 200px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="">선택하세요</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center;">
+                        <label for="personaB" style="font-size: 18px; font-weight: bold; margin-right: 10px;">페르소나 B:</label>
+                        <select id="personaB" style="padding: 10px; font-size: 16px; min-width: 200px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="">선택하세요</option>
+                        </select>
+                    </div>
+                    
+                    <button id="diffAnalyzeBtn" onclick="generateDiff()" style="padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        비교 분석
+                    </button>
+                    <span id="diffLoading" class="loading-indicator" style="display: none;">비교 분석 중...</span>
+                </div>
+            </div>
+            
+            <!-- 비교 결과 -->
+            <div id="diffContent" style="display: none;">
+                <!-- 질문 표시 -->
+                <div id="diffQuestion" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;"></div>
+                
+                <!-- 응답 비교 -->
+                <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                    <div style="flex: 1; background-color: #e3f2fd; padding: 15px; border-radius: 8px;">
+                        <h4 id="personaAName" style="margin-top: 0; color: #1976d2;"></h4>
+                        <div id="responseA" style="background-color: white; padding: 10px; border-radius: 4px; min-height: 100px;"></div>
+                    </div>
+                    
+                    <div style="flex: 1; background-color: #f3e5f5; padding: 15px; border-radius: 8px;">
+                        <h4 id="personaBName" style="margin-top: 0; color: #7b1fa2;"></h4>
+                        <div id="responseB" style="background-color: white; padding: 10px; border-radius: 4px; min-height: 100px;"></div>
+                    </div>
+                </div>
+                
+                <!-- 유사도 점수 -->
+                <div id="similarityScore" style="background-color: #fff3e0; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                    <h4 style="margin-top: 0; color: #f57c00;">📊 문장 유사도</h4>
+                    <div id="similarityValue" style="font-size: 24px; font-weight: bold;"></div>
+                </div>
+                
+                <!-- 의미 축별 차이 -->
+                <div id="dimensionDiffs" style="background-color: #f1f8e9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="margin-top: 0; color: #388e3c;">📈 의미 축별 차이 분석</h4>
+                    <div id="dimensionDiffsContent"></div>
+                </div>
+                
+                <!-- 차이점 하이라이트 -->
+                <div id="diffHighlights" style="background-color: #fff8e1; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                                          <h4 style="margin-top: 0; color: #f9a825;">차이점 하이라이트</h4>
+                    <div id="diffHighlightsContent" style="font-size: 15px;"></div>
+                </div>
+                
+                <!-- 요약 -->
+                <div id="diffSummary" style="background-color: #e8f5e8; padding: 15px; border-radius: 8px;">
+                    <h4 style="margin-top: 0; color: #2e7d32; font-size: 25px;"> 비교 요약</h4>
+                    <div id="diffSummaryContent" style="font-size: 15px;"></div>
+                </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 축별 정렬 리스트 (기준별 소팅) 섹션 -->
+        <div id="sortingListSection" class="visualization-section" style="display: none; margin-top: 30px;">
+            <h3 class="section-title">
+                축별 정렬 리스트 (기준별 소팅)
+                <span id="sortingListLoading" class="loading-indicator" style="display: none;">⏳ 정렬 리스트 생성 중...</span>
+            </h3>
+            <div id="sortingListContent"></div>
+        </div>
+
+                <!-- 구조화된 분석 결과 섹션 -->
+        <div id="structuredAnalysisSection" class="visualization-section" style="margin-top: 30px;">
+            <h3 class="section-title">
+                구조화된 분석 결과
+                <span id="structuredAnalysisLoading" class="loading-indicator" style="display: none;">⏳ 2단계: 구조화된 분석 생성 중...</span>
+            </h3>
+                
+                <!-- 분석 옵션 -->
+                <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">
+                    <h4 style="margin-top: 0; color: #495057;">🔧 분석 옵션</h4>
+                    <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="checkbox" id="includeEmbeddings" style="margin: 0;">
+                            임베딩 포함
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="checkbox" id="includeSimilarities" checked style="margin: 0;">
+                            유사도 계산
+                        </label>
+                        <select id="analysisDepth" style="padding: 5px 10px; border-radius: 4px; border: 1px solid #ddd;">
+                            <option value="basic">기본 분석</option>
+                            <option value="standard" selected>표준 분석</option>
+                            <option value="detailed">상세 분석</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- 분석 결과 -->
+                <div id="structuredAnalysisContent" style="display: none;">
+                    <!-- 질문 정보 -->
+                    <div id="questionInfo" style="background-color: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    </div>
+                    
+                    <!-- 페르소나별 응답 분석 -->
+                    <div id="personaResponses" style="background-color: #f1f8e9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <h4 style="margin-top: 0; color: #388e3c; font-size: 20px;">👥 페르소나별 응답 분석</h4>
+                        <div id="personaResponsesContent"></div>
+                    </div>
+                    
+                    <!-- 유사도 매트릭스 -->
+                    <div id="similarityMatrix" style="background-color: #fff3e0; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <h4 style="margin-top: 0; color: #f57c00;">🔗 유사도 매트릭스</h4>
+                        <div id="similarityMatrixContent"></div>
+                    </div>
+                    
+                    <!-- 전체 통계 -->
+                    <div id="overallStatistics" style="background-color: #f8e8f8; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <h4 style="margin-top: 0; color: #9c27b0;">📈 전체 통계</h4>
+                        <div id="overallStatisticsContent"></div>
+                    </div>
+                    
+                    <!-- 모델 정보 -->
+                    <div id="modelInfo" style="background-color: #e8f5e8; padding: 15px; border-radius: 8px;">
+                        <h4 style="margin-top: 0; color: #2e7d32;">🤖 모델 정보</h4>
+                        <div id="modelInfoContent"></div>
+                    </div>
+                    
+                    <!-- JSON 다운로드 -->
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button onclick="downloadStructuredAnalysis()" style="padding: 12px 24px; background-color: #17a2b8; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">
+                            💾 JSON 다운로드
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+    <script>
+        let currentExperiment = null;
+        let currentQuestion = null;
+        let currentDimension = null;
+        let currentRadarChart = null;
+        let questions = []; // 전역 questions 변수 추가
+
+        // 페이지 로드 시 초기화
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 DOMContentLoaded 이벤트 발생');
+            console.log('🔧 초기화 시작...');
+            
+            loadExperimentList();
+            loadDimensionOptions();
+            setupEventListeners();
+            
+            console.log('✅ 초기화 완료');
+        });
+
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            console.log('🔧 이벤트 리스너 설정 시작');
+            
+            const experimentSelect = document.getElementById('experimentSelect');
+            const questionSelect = document.getElementById('questionSelect');
+            const dimensionSelect = document.getElementById('dimensionSelect');
+            
+            console.log('experimentSelect 찾음:', experimentSelect);
+            console.log('questionSelect 찾음:', questionSelect);
+            console.log('dimensionSelect 찾음:', dimensionSelect);
+            
+            if (experimentSelect) {
+                experimentSelect.addEventListener('change', onExperimentChange);
+                console.log('✅ experimentSelect 이벤트 리스너 추가됨');
+            }
+            
+            if (questionSelect) {
+                questionSelect.addEventListener('change', onQuestionChange);
+                console.log('✅ questionSelect 이벤트 리스너 추가됨');
+            }
+            
+            if (dimensionSelect) {
+                dimensionSelect.addEventListener('change', onDimensionChange);
+                console.log('✅ dimensionSelect 이벤트 리스너 추가됨');
+            }
+        }
+
+        // 의미 축 옵션 로드
+        async function loadDimensionOptions() {
+            try {
+                const response = await fetch('/responses/personality.json');
+                if (response.ok) {
+                    const personalityData = await response.json();
+                    console.log('성격 데이터 로드 성공:', personalityData);
+                    
+                    const dimensionSelect = document.getElementById('dimensionSelect');
+                    dimensionSelect.innerHTML = '<option value="">의미 축을 선택하세요</option>';
+                    
+                    // 기질(Temperament) 기반 의미 축
+                    const temperament = personalityData.filter(p => p.type === 'temperament');
+                    if (temperament.length > 0) {
+                        const temp = temperament[0];
+                        Object.keys(temp.detail).forEach(key => {
+                            const opt = document.createElement('option');
+                            opt.value = `temperament_${key}`;
+                            opt.textContent = `기질: ${key}`;
+                            dimensionSelect.appendChild(opt);
+                        });
+                    }
+                    
+                    // 성격(Character) 기반 의미 축
+                    const character = personalityData.filter(p => p.type === 'character');
+                    if (character.length > 0) {
+                        const char = character[0];
+                        Object.keys(char.detail).forEach(key => {
+                            const opt = document.createElement('option');
+                            opt.value = `character_${key}`;
+                            opt.textContent = `성격: ${key}`;
+                            dimensionSelect.appendChild(opt);
+                        });
+                    }
+                    
+                    // 추가 의미 축
+                    const additionalDimensions = [
+                        { value: 'emotional_intensity', text: '감정 강도' },
+                        { value: 'valence', text: '정서 방향' },
+                        { value: 'expression_type', text: '표현 스타일' },
+                        { value: 'agency', text: '자기 주도성' },
+                        { value: 'extroversion', text: '외향성' },
+                        { value: 'solution_offered', text: '해결 전략 제시' },
+                        { value: 'response_length', text: '응답 길이' },
+                        { value: 'complexity', text: '응답 복잡도' }
+                    ];
+                    
+                    additionalDimensions.forEach(dim => {
+                        const opt = document.createElement('option');
+                        opt.value = dim.value;
+                        opt.textContent = dim.text;
+                        dimensionSelect.appendChild(opt);
+                    });
+                    
+                } else {
+                    console.error('성격 데이터 로드 실패:', response.status);
+                }
+            } catch (error) {
+                console.error('성격 데이터 로드 실패:', error);
+            }
+        }
+
+        // 실험 목록 로드
+        async function loadExperimentList() {
+            console.log('loadExperimentList 함수 시작');
+            
+            // DOM 요소 확인
+            const select = document.getElementById('experimentSelect');
+            console.log('experimentSelect 요소:', select);
+            
+            if (!select) {
+                console.error('❌ experimentSelect 요소를 찾을 수 없음! HTML을 확인하세요.');
+                return;
+            }
+            
+            try {
+                console.log('📡 /list_experiments API 호출 중...');
+                const res = await fetch('/list_experiments');
+                console.log('📡 API 응답 상태:', res.status, res.ok);
+                console.log('📡 API 응답 헤더:', Object.fromEntries(res.headers.entries()));
+                
+                if (res.ok) {
+                    const contentType = res.headers.get('content-type');
+                    console.log('📡 Content-Type:', contentType);
+                    
+                    if (contentType && contentType.includes('application/json')) {
+                        const list = await res.json();
+                        console.log('📋 받은 실험 목록:', list);
+                        console.log('📋 리스트 타입:', typeof list, '길이:', Array.isArray(list) ? list.length : '배열 아님');
+                        
+                        if (Array.isArray(list) && list.length > 0) {
+                            select.innerHTML = '<option value="">저장된 실험을 선택하세요</option>';
+                            
+                            list.forEach((item, idx) => {
+                                console.log(`실험 ${idx + 1}:`, item);
+                                const label = `${item.date || '날짜 없음'} | ${item.name || '이름 없음'} | ${item.age || '나이 없음'}`;
+                                const opt = document.createElement('option');
+                                opt.value = item.filename || `실험${idx + 1}`;
+                                opt.textContent = label;
+                                select.appendChild(opt);
+                                console.log('✅ 옵션 추가됨:', label);
+                            });
+                            
+                            console.log('✅ 실험 목록 로드 완료, 총', list.length, '개');
+                        } else {
+                            console.warn('⚠️ 실험 목록이 비어있거나 배열이 아님');
+                            select.innerHTML = '<option>저장된 실험이 없습니다</option>';
+                        }
+                    } else {
+                        console.error('❌ Content-Type이 JSON이 아님:', contentType);
+                        const text = await res.text();
+                        console.error('❌ 응답 내용:', text);
+                        select.innerHTML = '<option>응답 형식 오류</option>';
+                    }
+                } else {
+                    console.error('❌ API 응답 실패:', res.status, res.statusText);
+                    const errorText = await res.text();
+                    console.error('❌ 에러 내용:', errorText);
+                    select.innerHTML = '<option>API 응답 실패</option>';
+                }
+            } catch (e) {
+                console.error('❌ 실험 목록 로드 실패:', e);
+                console.error('❌ 에러 상세:', e.message, e.stack);
+                select.innerHTML = '<option>네트워크 오류</option>';
+            }
+        }
+
+        // 실험 파일 선택 시
+        async function onExperimentChange() {
+            console.log('🚀 onExperimentChange 호출됨');
+            const experimentFile = document.getElementById('experimentSelect').value;
+            console.log('선택된 실험 파일:', experimentFile);
+            if (!experimentFile) return;
+
+            try {
+                console.log('📡 /responses/' + experimentFile + ' API 호출 중...');
+                // 전체 실험 데이터를 직접 로드 (responses 폴더에서)
+                const res = await fetch(`/responses/${experimentFile}`);
+                console.log('📡 API 응답 상태:', res.status, res.ok);
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    currentExperiment = data;
+                    console.log('✅ 실험 데이터 로드 성공:', data);
+                    console.log('실험 데이터 구조 확인:');
+                    console.log('  - experiment_num:', data.experiment_num);
+                    console.log('  - history 키 존재:', 'history' in data);
+                    console.log('  - history 길이:', data.history ? data.history.length : 'undefined');
+                    
+                    if ('history' in data && data.history && data.history.length > 0) {
+                        console.log('  - history[0] 키들:', Object.keys(data.history[0]));
+                        if ('answers' in data.history[0]) {
+                            console.log('  - answers 개수:', data.history[0].answers.length);
+                            console.log('  - 첫 번째 answer 구조:', data.history[0].answers[0]);
+                        }
+                        if ('question_text' in data.history[0]) {
+                            console.log('  - question_text:', data.history[0].question_text);
+                        }
+                    }
+                    
+                    // 질문과 의미축 선택 초기화
+                    document.getElementById('questionSelect').value = '';
+                    document.getElementById('dimensionSelect').value = '';
+                    currentQuestion = null;
+                    currentDimension = null;
+                    
+                    // 질문 목록 로드
+                    loadQuestions(data);
+                    
+                    // 페르소나 목록 로드 (Diff용)
+                    loadPersonasForDiff();
+                    
+                    // 기존 차트들 초기화
+                    clearVisualizations();
+                    
+                    // 구조화된 분석 섹션 표시 (하지만 내용은 비어있음)
+                    const structuredSection = document.getElementById('structuredAnalysisSection');
+                    console.log('structuredSection 찾기 시도:', structuredSection);
+                    if (structuredSection) {
+                        console.log('✅ structuredSection 찾음, display를 block으로 설정');
+                        structuredSection.style.display = 'block';
+                        console.log('설정 후 display 상태:', structuredSection.style.display);
+                    } else {
+                        console.error('❌ structuredAnalysisSection을 찾을 수 없음');
+                    }
+                    
+                    // Diff 섹션은 그대로 두고 페르소나 목록만 로드
+                    const diffSection = document.getElementById('diffSection');
+                    if (diffSection) {
+                        // Side-by-Side 섹션이 보이는 상태라면 페르소나 목록 로드
+                        if (diffSection.style.display !== 'none') {
+                            loadPersonasForDiff();
+                        }
+                    }
+
+                    // 자동 분석 비활성화 - 버튼을 눌러야만 시작
+                    console.log('✅ 실험 선택 완료 - 버튼을 눌러주세요');
+                } else {
+                    console.error('❌ 실험 데이터 로드 실패:', res.status, res.statusText);
+                    const errorText = await res.text();
+                    console.error('❌ 에러 내용:', errorText);
+                    alert('실험 데이터를 로드할 수 없습니다. 서버를 확인해주세요.');
+                }
+            } catch (e) {
+                console.error('❌ 실험 데이터 로드 실패:', e);
+                console.error('❌ 에러 상세:', e.message, e.stack);
+                alert('실험 데이터 로드 중 오류가 발생했습니다: ' + e.message);
+            }
+        }
+
+        // 질문 목록 로드
+        function loadQuestions(experimentData) {
+            const select = document.getElementById('questionSelect');
+            select.innerHTML = '<option value="">질문을 선택하세요</option>';
+            
+            console.log('질문 로드 시작:', experimentData);
+            
+            // questions.json에서 질문 데이터 로드
+            fetch('/static/questions.json')
+                .then(response => response.json())
+                .then(questionsData => {
+                    console.log('질문 데이터 로드 성공:', questionsData);
+                    
+                    // 전역 questions 변수에 저장
+                    questions = questionsData.map(q => q.text || '');
+                    console.log('✅ 전역 questions 변수 설정됨:', questions);
+                    
+                    questionsData.forEach((q, idx) => {
+                        const opt = document.createElement('option');
+                        opt.value = idx;
+                        opt.textContent = q.text || `질문 ${idx + 1}`;
+                        select.appendChild(opt);
+                    });
+                })
+                .catch(error => {
+                    console.error('질문 데이터 로드 실패:', error);
+                    // 대체 방법: experimentData에서 질문 추출 시도
+                    if (experimentData.history && experimentData.history.length > 0) {
+                        const firstHistory = experimentData.history[0];
+                        if (firstHistory.answers && firstHistory.answers.length > 0) {
+                            // answers 구조에서 질문 추출
+                            firstHistory.answers.forEach((answer, idx) => {
+                                const opt = document.createElement('option');
+                                opt.value = idx;
+                                opt.textContent = `질문 ${idx + 1}`;
+                                select.appendChild(opt);
+                            });
+                            
+                            // 전역 questions 변수에 기본값 설정
+                            questions = Array.from({length: firstHistory.answers.length}, (_, i) => `질문 ${i + 1}`);
+                            console.log('✅ 전역 questions 변수 설정됨 (기본값):', questions);
+                        } else if (firstHistory.prompts && firstHistory.prompts.length > 0) {
+                            // prompts 구조에서 질문 추출
+                            firstHistory.prompts.forEach((prompt, idx) => {
+                                if (prompt.qa && prompt.qa.length > 0) {
+                                    prompt.qa.forEach((qa, qaIdx) => {
+                                        const opt = document.createElement('option');
+                                        opt.value = `${idx}_${qaIdx}`;
+                                        opt.textContent = qa.question || `질문 ${idx + 1}_${qaIdx + 1}`;
+                                        select.appendChild(opt);
+                                    });
+                                }
+                            });
+                            
+                            // 전역 questions 변수에 기본값 설정
+                            questions = Array.from({length: firstHistory.prompts.length}, (_, i) => `질문 ${i + 1}`);
+                            console.log('✅ 전역 questions 변수 설정됨 (기본값):', questions);
+                        }
+                    }
+                });
+        }
+
+        // 질문 변경 시
+        function onQuestionChange() {
+            const newQuestion = document.getElementById('questionSelect').value;
+            console.log('질문 변경 감지:', currentQuestion, '→', newQuestion);
+            
+            if (newQuestion !== currentQuestion) {
+                currentQuestion = newQuestion;
+                if (currentQuestion !== '') {
+                    clearVisualizations();
+                    // 자동 분석 비활성화 - 버튼을 눌러야만 시작
+                    console.log('✅ 질문 선택 완료 - 버튼을 눌러주세요');
+                } else {
+                    // 질문이 선택 해제된 경우
+                    clearVisualizations();
+                    console.log('🔄 질문 선택 해제됨');
+                }
+            }
+        }
+
+        // 의미 축 변경 시
+        function onDimensionChange() {
+            const newDimension = document.getElementById('dimensionSelect').value;
+            console.log('의미 축 변경 감지:', currentDimension, '→', newDimension);
+            
+            if (newDimension !== currentDimension) {
+                currentDimension = newDimension;
+                if (currentDimension !== '') {
+                    clearVisualizations();
+                    // 자동 분석 비활성화 - 버튼을 눌러야만 시작
+                    console.log('✅ 의미 축 선택 완료 - 버튼을 눌러주세요');
+                } else {
+                    // 의미 축이 선택 해제된 경우
+                    clearVisualizations();
+                    console.log('🔄 의미 축 선택 해제됨');
+                }
+            }
+        }
+
+        // 자동 분석 함수는 비활성화됨 - 버튼을 눌러야만 시작
+        // function autoStartAnalysis() { ... }
+
+        // 로딩 상태 관리 함수들
+        let loadingStates = {
+            sortingChart: false,
+            sortingList: false,
+            structuredAnalysis: false
+        };
+
+        function showLoading() {
+            loadingStates.sortingChart = true;
+            loadingStates.sortingList = true;
+            loadingStates.structuredAnalysis = true;
+            
+            // 로딩 인디케이터 표시 (존재하는 경우에만)
+            const sortingChartLoading = document.getElementById('sortingChartLoading');
+            const sortingListLoading = document.getElementById('sortingListLoading');
+            const structuredAnalysisLoading = document.getElementById('structuredAnalysisLoading');
+            
+            if (sortingChartLoading) sortingChartLoading.style.display = 'inline-block';
+            if (sortingListLoading) sortingListLoading.style.display = 'inline-block';
+            if (structuredAnalysisLoading) structuredAnalysisLoading.style.display = 'inline-block';
+            
+            // 차트 컨테이너에 로딩 클래스 추가 (존재하는 경우에만)
+            const chartContainer = document.querySelector('.chart-container');
+            const sortingListSection = document.getElementById('sortingListSection');
+            const structuredAnalysisContent = document.getElementById('structuredAnalysisContent');
+            
+            if (chartContainer) chartContainer.classList.add('loading');
+            if (sortingListSection) sortingListSection.classList.add('loading');
+            if (structuredAnalysisContent) structuredAnalysisContent.classList.add('loading');
+            
+            console.log('🔄 로딩 시작 - 모든 시각화');
+        }
+
+        function hideLoading() {
+            loadingStates.sortingChart = false;
+            loadingStates.sortingList = false;
+            loadingStates.structuredAnalysis = false;
+            
+            // 로딩 인디케이터 숨김 (존재하는 경우에만)
+            const sortingChartLoading = document.getElementById('sortingChartLoading');
+            const sortingListLoading = document.getElementById('sortingListLoading');
+            const structuredAnalysisLoading = document.getElementById('structuredAnalysisLoading');
+            
+            if (sortingChartLoading) sortingChartLoading.style.display = 'none';
+            if (sortingListLoading) sortingListLoading.style.display = 'none';
+            if (structuredAnalysisLoading) structuredAnalysisLoading.style.display = 'none';
+            
+            console.log('✅ 로딩 완료 - 모든 시각화');
+        }
+
+        function hideSpecificLoading(type) {
+            if (type === 'sortingChart') {
+                loadingStates.sortingChart = false;
+                document.getElementById('sortingChartLoading').style.display = 'none';
+                document.querySelector('.chart-container').classList.remove('loading');
+                console.log('✅ 정렬 차트 로딩 완료');
+            } else if (type === 'sortingList') {
+                loadingStates.sortingList = false;
+                document.getElementById('sortingListLoading').style.display = 'none';
+                document.getElementById('sortingListSection').classList.remove('loading');
+                console.log('✅ 정렬 리스트 로딩 완료');
+            } else if (type === 'structuredAnalysis') {
+                loadingStates.structuredAnalysis = false;
+                document.getElementById('structuredAnalysisLoading').style.display = 'none';
+                document.getElementById('structuredAnalysisContent').classList.remove('loading');
+                console.log('✅ 구조화된 분석 로딩 완료');
+            }
+            
+            // 모든 로딩이 완료되었는지 확인
+            if (!loadingStates.sortingChart && !loadingStates.sortingList && !loadingStates.structuredAnalysis) {
+                console.log('🎉 모든 분석 완료!');
+            }
+        }
+
+        // 통합 분석 시작 (시각화 + 구조화된 분석)
+        function startCompleteAnalysis() {
+            // 현재 선택된 값들을 다시 확인
+            const selectedExperiment = document.getElementById('experimentSelect').value;
+            const selectedQuestion = document.getElementById('questionSelect').value;
+            const selectedDimension = document.getElementById('dimensionSelect').value;
+            
+            console.log('현재 선택된 값들 확인:', {
+                experiment: selectedExperiment,
+                question: selectedQuestion,
+                dimension: selectedDimension
+            });
+            
+            // 값이 변경되었으면 전역 변수 업데이트
+            if (selectedQuestion !== currentQuestion) {
+                currentQuestion = selectedQuestion;
+                console.log('🔄 currentQuestion 업데이트됨:', currentQuestion);
+            }
+            if (selectedDimension !== currentDimension) {
+                currentDimension = selectedDimension;
+                console.log('🔄 currentDimension 업데이트됨:', currentDimension);
+            }
+            
+            if (!currentExperiment || currentQuestion === null || !currentDimension) {
+                alert('실험, 질문, 의미 축을 모두 선택해주세요.');
+                return;
+            }
+
+            console.log('🚀 통합 분석 시작:', {
+                experiment: currentExperiment,
+                question: currentQuestion,
+                dimension: currentDimension
+            });
+
+            // 로딩 표시 시작
+            showLoading();
+
+            console.log('📋 분석 순서: 1단계(축별 정렬 차트) → 2단계(구조화된 분석)');
+
+            // 1단계: 축별 정렬 차트 먼저 생성 (프론트엔드에서 직접)
+            try {
+                console.log('1단계 시작: 축별 정렬 차트 생성');
+                
+                // 축별 정렬 차트 섹션 표시
+                const sortingListSection = document.getElementById('sortingListSection');
+                if (sortingListSection) {
+                    sortingListSection.style.display = 'block';
+                    console.log('✅ sortingListSection 표시됨');
+                }
+                
+                // 축별 정렬 차트 생성
+                generateSortingList();
+                console.log('✅ 1단계 완료: 축별 정렬 차트');
+                
+                // 1단계 완료 후 로딩 표시 제거
+                hideLoading();
+                console.log('✅ 1단계 로딩 표시 제거됨');
+                
+                // 2단계: 백엔드에서 구조화된 분석 시작
+                console.log('🔄 2단계 시작: 백엔드 구조화된 분석');
+                generateStructuredAnalysis();
+            } catch (error) {
+                console.error('❌ 1단계 실패:', error);
+                console.log('🔄 2단계 시작: 구조화된 분석 (1단계 실패 후)');
+                // 오류가 발생해도 구조화된 분석은 시도
+                generateStructuredAnalysis();
+            }
+        }
+
+        // 시각화 시작 (기존 함수 - 호환성 유지)
+        function startVisualization() {
+            startCompleteAnalysis();
+        }
+
+        // 백엔드에서 시각화 생성
+        async function generateVisualizationsFromBackend() {
+            try {
+                const requestData = {
+                    experiment_data: currentExperiment,
+                    question_index: parseInt(currentQuestion),
+                    dimension: currentDimension,
+                    analysis_type: "all",
+                    // heatmap_type: document.getElementById('heatmapTypeSelect').value
+                };
+
+                console.log('프론트엔드 디버깅: currentExperiment =', currentExperiment);
+                console.log('프론트엔드 디버깅: currentQuestion =', currentQuestion);
+                console.log('프론트엔드 디버깅: currentDimension =', currentDimension);
+                console.log('프론트엔드 디버깅: requestData =', requestData);
+
+                const response = await fetch('/visualization/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('백엔드 시각화 결과:', result);
+                    
+                    if (result.success) {
+                        // 캐시에서 로드되었는지 확인 (콘솔에만 로그, 사용자에게는 알림하지 않음)
+                        if (result.loaded_from_cache) {
+                            console.log('✅ 기존 분석 결과를 캐시에서 로드했습니다');
+                        } else {
+                            console.log('🔄 새로운 분석을 생성했습니다');
+                        }
+                        
+                        displayBackendVisualizations(result.data);
+                        // 시각화 로딩 완료
+                        hideSpecificLoading('sortingChart');
+                        hideSpecificLoading('sortingList');
+                        
+                        // 성공적으로 완료됨을 알림
+                        return Promise.resolve();
+                    } else {
+                        throw new Error(result.message || '시각화 생성 실패');
+                    }
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'API 호출 실패');
+                }
+            } catch (error) {
+                console.error('백엔드 시각화 생성 실패:', error);
+                
+                // 시각화 로딩 완료 (오류 발생 시에도)
+                hideSpecificLoading('sortingChart');
+                hideSpecificLoading('sortingList');
+                
+                // 더 자세한 오류 메시지 표시
+                let errorMessage = '시각화 생성에 실패했습니다: ' + error.message;
+                if (error.message.includes('answers 배열이 비어있습니다')) {
+                    errorMessage = '시각화 생성에 실패했습니다: 선택한 실험의 응답 데이터가 비어있습니다. 다른 실험을 선택하거나 응답 데이터가 있는 실험을 사용해주세요.';
+                }
+                alert(errorMessage);
+                
+                // 백엔드 실패 시 프론트엔드 시각화로 대체
+                // generateRadarChart();
+                // generateHeatmap();
+                generateSortingList();
+                
+                // 오류 발생 시에도 Promise.resolve() 반환 (구조화된 분석 진행)
+                return Promise.resolve();
+            }
+        }
+
+        // 백엔드 시각화 결과 표시
+        function displayBackendVisualizations(data) {
+                            console.log('백엔드 시각화 데이터:', data);
+            
+            // 레이더 차트 표시
+            /* if (data.radar_chart) {
+                displayRadarChart(data.radar_chart);
+            } */
+            
+            // 히트맵 표시
+            /* if (data.heatmap) {
+                const heatmapType = data.heatmap_type || "seaborn";
+                displayHeatmap(data.heatmap, heatmapType);
+            } */
+            
+            // 정렬 차트 표시
+            if (data.sorting_chart) {
+                console.log('정렬 차트 데이터:', data.sorting_chart);
+                displaySortingChart(data.sorting_chart);
+            } else {
+                console.log('❌ 정렬 차트 데이터 없음');
+            }
+            
+            // 정렬 리스트 표시
+            if (data.sorting_list) {
+                console.log('정렬 리스트 데이터:', data.sorting_list);
+                displaySortingList(data.sorting_list);
+            } else {
+                console.log('❌ 정렬 리스트 데이터 없음');
+            }
+        }
+
+        // 백엔드 레이더 차트 표시
+        /* function displayRadarChart(chartData) {
+            const container = document.getElementById('radarChart');
+            
+            // 기존 차트 제거
+            if (currentRadarChart) {
+                Plotly.purge('radarChart');
+                currentRadarChart = null;
+            }
+            
+            // Plotly로 차트 생성
+            Plotly.newPlot('radarChart', chartData.data, chartData.layout, {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+                displaylogo: false
+            }).then(() => {
+                currentRadarChart = true;
+            });
+        } */
+
+        // 백엔드 히트맵 표시
+        /* function displayHeatmap(heatmapData, heatmapType = "seaborn") {
+            const container = document.getElementById('heatmapContent');
+            
+            if (heatmapType === "plotly") {
+                // Plotly 히트맵 표시
+                container.innerHTML = '<div id="plotlyHeatmap" style="width: 100%; height: 500px;"></div>';
+                
+                // Plotly로 차트 생성
+                Plotly.newPlot('plotlyHeatmap', heatmapData.data, heatmapData.layout, {
+                    responsive: true,
+                    displayModeBar: true,
+                    modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+                    displaylogo: false
+                });
+            } else {
+                // Seaborn 히트맵 (base64 이미지) 표시
+                container.innerHTML = `
+                    <div style="text-align: center;">
+                        <h4 style="margin-bottom: 20px; color: color: #495057;">페르소나별 의미 분석 히트맵</h4>
+                        <img src="data:image/png;base64,${heatmapData}" 
+                             alt="히트맵" 
+                             style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
+                </div>
+            `;
+            }
+        } */
+
+        // 백엔드 정렬 차트 표시
+        function displaySortingChart(chartData) {
+                            console.log('정렬 차트 표시 시작:', chartData);
+            const container = document.getElementById('sortingContent');
+            
+            if (!chartData || !chartData.data || !chartData.layout) {
+                console.error('❌ 정렬 차트 데이터 형식 오류:', chartData);
+                return;
+            }
+            
+            try {
+                // Plotly로 차트 생성
+                Plotly.newPlot('sortingContent', chartData.data, chartData.layout, {
+                    responsive: true,
+                    displayModeBar: true,
+                    modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+                    displaylogo: false
+                });
+                console.log('✅ 정렬 차트 생성 완료');
+            } catch (error) {
+                console.error('❌ 정렬 차트 생성 실패:', error);
+            }
+        }
+
+        // 백엔드 정렬 리스트 표시
+        function displaySortingList(sortingData) {
+                            console.log('정렬 리스트 표시 시작:', sortingData);
+            const container = document.getElementById('sortingListContent');
+            
+            if (!sortingData || !sortingData.sorted_data) {
+                console.error('❌ 정렬 리스트 데이터 형식 오류:', sortingData);
+                return;
+            }
+            
+            try {
+                let html = '<div class="sorting-list">';
+                html += `<h4>${sortingData.dimension_name} 기준 정렬</h4>`;
+                html += '<div class="sorting-items" id="sortingItemsContainer">';
+                
+                // 상위 3개만 먼저 표시
+                const top3Items = sortingData.sorted_data.slice(0, 3);
+                top3Items.forEach((item) => {
+                    html += `
+                        <div class="sorting-item top-rank">
+                            <span class="rank">${item.rank}</span>
+                            <span class="personality clickable-persona" onclick="goToPersonaDetail('${item.display_name}')">${item.display_name}</span>
+                            <span class="value">${item.value}</span>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                
+                // 4위 이하가 있는 경우 더보기 버튼 추가
+                if (sortingData.sorted_data.length > 3) {
+                    html += `
+                        <div class="show-more-container" style="text-align: center; margin-top: 20px;">
+                            <button id="showMoreBtn" class="show-more-btn" onclick="toggleSortingList()">
+                                📋 더보기 (${sortingData.sorted_data.length - 3}개 더)
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                html += '</div>';
+                container.innerHTML = html;
+            
+            // 정렬 데이터를 전역 변수로 저장 (더보기 기능용)
+            window.currentSortingData = sortingData;
+            
+            // 정렬 리스트 섹션 표시
+            document.getElementById('sortingListSection').style.display = 'block';
+            
+            // 각 응답 텍스트에 태그 하이라이트 적용
+            personaResponses.forEach((pr, index) => {
+                const highlightedContainer = document.getElementById(`highlightedText_${index}`);
+                if (highlightedContainer) {
+                    highlightedContainer.innerHTML = highlightTagsInText(pr.text, pr.tags);
+                }
+            });
+            
+            console.log('✅ 정렬 리스트 표시 완료');
+            } catch (error) {
+                console.error('❌ 정렬 리스트 표시 실패:', error);
+            }
+        }
+
+        // 선택된 질문의 텍스트 가져오기
+        function getSelectedQuestionText() {
+            console.log('getSelectedQuestionText 호출됨');
+            console.log('currentQuestion:', currentQuestion);
+            console.log('questions:', questions);
+            console.log('questions 길이:', questions ? questions.length : 'undefined');
+            
+            if (currentQuestion === null || currentQuestion === '') {
+                console.log('⚠️ currentQuestion이 null이거나 빈 문자열');
+                return '질문을 선택해주세요';
+            }
+            
+            if (!questions || !Array.isArray(questions)) {
+                console.log('⚠️ questions가 배열이 아님');
+                return `질문 ${parseInt(currentQuestion) + 1}`;
+            }
+            
+            if (!questions[currentQuestion]) {
+                console.log('⚠️ questions[currentQuestion]이 없음');
+                return `질문 ${parseInt(currentQuestion) + 1}`;
+            }
+            
+            // questions 배열에서 해당 인덱스의 질문 텍스트 반환
+            const questionText = questions[currentQuestion];
+            console.log(`✅ 선택된 질문 텍스트: ${questionText}`);
+            return questionText;
+        }
+
+        // 페르소나 상세 페이지로 이동
+        function goToPersonaDetail(personaName) {
+            console.log('goToPersonaDetail 호출됨:', personaName);
+            console.log('currentExperiment:', currentExperiment);
+            
+            if (!currentExperiment) {
+                alert('먼저 실험을 선택해주세요.');
+                return;
+            }
+            
+            const experimentName = currentExperiment.replace('.json', '');
+            const url = `/persona-detail?persona=${encodeURIComponent(personaName)}&experiment=${encodeURIComponent(experimentName)}&file=${encodeURIComponent(currentExperiment)}`;
+            
+            console.log('이동할 URL:', url);
+            
+            // 새 탭에서 열기
+            try {
+                const newWindow = window.open(url, '_blank');
+                if (newWindow) {
+                    console.log('✅ 새 탭 열기 성공');
+                } else {
+                    console.error('❌ 새 탭 열기 실패 - 팝업 차단됨');
+                    alert('팝업이 차단되었습니다. 브라우저 설정을 확인해주세요.');
+                }
+            } catch (error) {
+                console.error('❌ 새 탭 열기 중 오류:', error);
+                alert('페이지 이동 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 정렬 리스트 더보기/접기 토글
+        function toggleSortingList() {
+            const container = document.getElementById('sortingItemsContainer');
+            const showMoreBtn = document.getElementById('showMoreBtn');
+            const sortingData = window.currentSortingData; // 전역 변수로 저장
+            
+            if (!sortingData) {
+                console.error('❌ 정렬 데이터를 찾을 수 없습니다');
+                return;
+            }
+            
+            const isExpanded = container.getAttribute('data-expanded') === 'true';
+            
+            if (!isExpanded) {
+                // 전체 목록 표시
+                let html = '';
+                sortingData.forEach((item, index) => {
+                    const rank = index + 1;
+                    const rankClass = rank <= 3 ? 'top-rank' : '';
+                    console.log(`전체 목록 페르소나 아이템 생성: ${item.personality}`);
+                    html += `
+                        <div class="sorting-item ${rankClass}">
+                            <span class="rank">${rank}</span>
+                            <span class="personality">${item.personality}</span>
+                            <span class="value">${item.value.toFixed(2)}</span>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+                container.setAttribute('data-expanded', 'true');
+                showMoreBtn.innerHTML = '📋 접기';
+                showMoreBtn.style.backgroundColor = '#6c757d';
+            } else {
+                // 상위 3개만 표시
+                let html = '';
+                const top3Items = sortingData.slice(0, 3);
+                top3Items.forEach((item, index) => {
+                    const rank = index + 1;
+                    html += `
+                        <div class="sorting-item top-rank">
+                            <span class="rank">${rank}</span>
+                            <span class="personality">${item.personality}</span>
+                            <span class="value">${item.value.toFixed(2)}</span>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+                container.setAttribute('data-expanded', 'false');
+                showMoreBtn.innerHTML = `📋 더보기 (${sortingData.length - 3}개 더)`;
+                showMoreBtn.style.backgroundColor = '#007bff';
+            }
+        }
+
+        // 레이더 차트 생성
+        /* function generateRadarChart() {
+            const container = document.getElementById('radarChart');
+            
+            // 기존 차트 제거
+            if (currentRadarChart) {
+                Plotly.purge('radarChart');
+                currentRadarChart = null;
+            }
+
+            // 실제 데이터 기반 차트 생성
+            const data = generateRadarDataFromExperiment();
+            
+            const layout = {
+                polar: {
+                    radialaxis: {
+                        visible: true,
+                        range: [0, 5],
+                        tickmode: 'array',
+                        tickvals: [0, 1, 2, 3, 4, 5],
+                        ticktext: ['0', '1', '2', '3', '4', '5'],
+                        tickfont: { size: 12 },
+                        tickcolor: '#666'
+                    },
+                    angularaxis: {
+                        tickfont: { size: 14, weight: 'bold' },
+                        tickcolor: '#333'
+                    },
+                    bgcolor: '#f8f9fa'
+                },
+                        title: {
+                    text: `질문 ${parseInt(currentQuestion) + 1}: ${getQuestionText(currentQuestion)}`,
+                    font: { size: 18, weight: 'bold' },
+                    x: 0.5,
+                    y: 0.95
+                },
+                showlegend: true,
+                        legend: {
+                    x: 0.5,
+                    y: 0.85,
+                    xanchor: 'center',
+                    yanchor: 'top',
+                    orientation: 'h',
+                    bgcolor: 'rgba(255,255,255,0.8)',
+                    bordercolor: '#ccc',
+                    borderwidth: 1
+                },
+                plot_bgcolor: '#ffffff',
+                paper_bgcolor: '#ffffff',
+                margin: { t: 100, b: 50, l: 50, r: 50 },
+                height: 500
+            };
+            
+            Plotly.newPlot('radarChart', data, layout, {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+                displaylogo: false
+            }).then(() => {
+                currentRadarChart = true;
+            });
+        } */
+
+        // 실험 데이터에서 레이더 차트 데이터 생성
+        function generateRadarDataFromExperiment() {
+            if (!currentExperiment || !currentExperiment.prompts) {
+                return generateSampleRadarData();
+            }
+
+            try {
+                const labels = [];
+                const datasets = [];
+                
+                // 의미 축에 따른 라벨 생성
+                if (currentDimension.startsWith('temperament_')) {
+                    const dimensionKey = currentDimension.replace('temperament_', '');
+                    labels.push(dimensionKey);
+                } else if (currentDimension.startsWith('character_')) {
+                    const dimensionKey = currentDimension.replace('character_', '');
+                    labels.push(dimensionKey);
+                } else {
+                    labels.push(currentDimension);
+                }
+
+                // 페르소나별 데이터 수집
+                const personalities = [];
+                currentExperiment.prompts.forEach(prompt => {
+                    if (prompt.personality && !personalities.includes(prompt.personality)) {
+                        personalities.push(prompt.personality);
+                    }
+                });
+
+                // 각 페르소나별 데이터셋 생성
+                personalities.forEach((personality, index) => {
+                    const color = getColorForIndex(index);
+                    const data = [];
+                    
+                    // 의미 축에 따른 값 계산
+                    if (currentDimension.startsWith('temperament_') || currentDimension.startsWith('character_')) {
+                        // 성격 데이터에서 실제 값 추출
+                        const value = extractPersonalityValue(personality, currentDimension);
+                        data.push(value);
+                    } else {
+                        // 응답 분석 기반 값 계산
+                        const value = analyzeResponseValue(personality, currentDimension);
+                        data.push(value);
+                    }
+
+                    datasets.push({
+                        type: 'scatterpolar',
+                        mode: 'lines+markers',
+                        name: personality,
+                        r: data,
+                        theta: labels,
+                        line: {
+                            color: color,
+                            width: 3
+                        },
+                        marker: {
+                            color: color,
+                            size: 10,
+                            symbol: 'circle'
+                        },
+                        fill: 'toself',
+                        fillcolor: color + '40',
+                        opacity: 0.6,
+                        hoverinfo: 'text+name',
+                        hovertext: `${personality}<br>${getDimensionDisplayName(currentDimension)}: ${data[0].toFixed(2)}`,
+                        hovertemplate: '<b>%{fullData.name}</b><br>' +
+                                     `${getDimensionDisplayName(currentDimension)}: %{r}<br>` +
+                                     '<extra></extra>'
+                    });
+                });
+
+                return datasets;
+            } catch (error) {
+                console.error('레이더 차트 데이터 생성 실패:', error);
+                return generateSampleRadarData();
+            }
+        }
+
+        // 성격 데이터에서 값 추출
+        function extractPersonalityValue(personality, dimension) {
+            try {
+                if (dimension.startsWith('temperament_')) {
+                    const key = dimension.replace('temperament_', '');
+                    // personality.json에서 해당 기질 값 찾기
+                    return Math.random() * 5; // 임시로 랜덤 값 반환
+                } else if (dimension.startsWith('character_')) {
+                    const key = dimension.replace('character_', '');
+                    // personality.json에서 해당 성격 값 찾기
+                    return Math.random() * 5; // 임시로 랜덤 값 반환
+                }
+                return Math.random() * 5;
+            } catch (error) {
+                console.error('성격 값 추출 실패:', error);
+                return Math.random() * 5;
+            }
+        }
+
+        // 응답 분석 기반 값 계산
+        function analyzeResponseValue(personality, dimension) {
+            try {
+                // 현재 선택된 질문에 대한 응답 찾기
+                const questionIndex = parseInt(currentQuestion);
+                const response = findResponseForQuestion(personality, questionIndex);
+                
+                if (!response) return Math.random() * 5;
+
+                switch (dimension) {
+                    case 'emotional_intensity':
+                        return analyzeEmotionIntensity(response);
+                    case 'valence':
+                        return analyzeValence(response);
+                    case 'expression_type':
+                        return analyzeExpressionType(response);
+                    case 'agency':
+                        return analyzeAgency(response);
+                    case 'extroversion':
+                        return analyzeExtroversion(response);
+                    case 'solution_offered':
+                        return analyzeSolutionOffered(response);
+                    case 'response_length':
+                        return Math.min(response.length / 50, 5); // 응답 길이 기반
+                    case 'complexity':
+                        return analyzeComplexity(response);
+                    default:
+                        return Math.random() * 5;
+                }
+            } catch (error) {
+                console.error('응답 분석 실패:', error);
+                return Math.random() * 5;
+            }
+        }
+
+        // 질문에 대한 응답 찾기
+        function findResponseForQuestion(personality, questionIndex) {
+            console.log('findResponseForQuestion 시작:', personality, questionIndex);
+            console.log('currentExperiment 구조:', Object.keys(currentExperiment));
+            
+            if (!currentExperiment || !currentExperiment.history) {
+                console.error('❌ currentExperiment.history가 없습니다');
+                return null;
+            }
+            
+            // 모든 history 항목에서 해당 질문과 페르소나에 맞는 응답 찾기
+            for (let historyIdx = 0; historyIdx < currentExperiment.history.length; historyIdx++) {
+                const historyItem = currentExperiment.history[historyIdx];
+                console.log(`history[${historyIdx}] 구조:`, Object.keys(historyItem));
+                
+                // 해당 질문인지 확인
+                if (historyItem.question_text) {
+                    console.log(`질문 텍스트: ${historyItem.question_text}`);
+                    
+                    // answers에서 해당 페르소나의 응답 찾기
+                    if (historyItem.answers && historyItem.answers.length > 0) {
+                        for (const answer of historyItem.answers) {
+                            if (answer.personality === personality) {
+                                console.log('✅ 해당 페르소나와 질문에서 응답 찾음:', answer.answer);
+                                return answer.answer;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // 백업: prompts에서도 응답 찾기
+            const firstHistory = currentExperiment.history[0];
+            if (firstHistory.prompts && firstHistory.prompts.length > 0) {
+                for (const prompt of firstHistory.prompts) {
+                    if (prompt.personality === personality && prompt.qa && prompt.qa[questionIndex]) {
+                        console.log('✅ prompts에서 응답 찾음:', prompt.qa[questionIndex].answer);
+                        return prompt.qa[questionIndex].answer;
+                    }
+                }
+            }
+            
+            console.log('❌ 응답을 찾을 수 없음');
+            return null;
+        }
+
+        // 질문 텍스트 가져오기
+        function getQuestionText(questionIndex) {
+            const questionSelect = document.getElementById('questionSelect');
+            const option = questionSelect.options[questionSelect.selectedIndex];
+            return option ? option.textContent : `질문 ${parseInt(questionIndex) + 1}`;
+        }
+
+        // 감정 강도 분석
+        function analyzeEmotionIntensity(text) {
+            const emotionWords = ['행복', '슬픔', '화남', '기쁨', '우울', '불안', '짜증', '만족'];
+            const intensity = emotionWords.reduce((score, word) => {
+                const count = (text.match(new RegExp(word, 'g')) || []).length;
+                return score + count * 0.5;
+            }, 0);
+            return Math.min(intensity, 5);
+        }
+
+        // 정서 방향 분석
+        function analyzeValence(text) {
+            const positiveWords = ['좋음', '기쁨', '행복', '만족', '화려함', '즐거움', '희망', '흥미로움'];
+            const negativeWords = ['나쁨', '슬픔', '우울', '불안', '불만', '짜증', '피곤함', '지루함'];
+
+            const positiveScore = positiveWords.reduce((sum, word) => sum + (text.includes(word) ? 1 : 0), 0);
+            const negativeScore = negativeWords.reduce((sum, word) => sum + (text.includes(word) ? 1 : 0), 0);
+
+            return Math.min(positiveScore - negativeScore, 5);
+        }
+
+        // 표현 스타일 분석
+        function analyzeExpressionType(text) {
+            const expressiveWords = ['활발', '즐거움', '흥미로움', '화려함', '즐거움', '희망', '흥미로움', '화려함'];
+            const reservedWords = ['조용', '지루', '피곤', '우울', '불안', '불만', '짜증', '피곤'];
+
+            const expressiveScore = expressiveWords.reduce((sum, word) => sum + (text.includes(word) ? 1 : 0), 0);
+            const reservedScore = reservedWords.reduce((sum, word) => sum + (text.includes(word) ? 1 : 0), 0);
+
+            return Math.min(expressiveScore - reservedScore, 5);
+        }
+
+        // 자기 주도성 분석
+        function analyzeAgency(text) {
+            const selfDirectedWords = ['나', '내', '저', '제', '우리', '우리들', '너', '너희', '너희들'];
+            const otherDirectedWords = ['너', '너희', '너희들', '그', '그들', '이', '우리', '우리들'];
+
+            const selfDirectedScore = selfDirectedWords.reduce((sum, word) => sum + (text.includes(word) ? 1 : 0), 0);
+            const otherDirectedScore = otherDirectedWords.reduce((sum, word) => sum + (text.includes(word) ? 1 : 0), 0);
+
+            return Math.min(selfDirectedScore - otherDirectedScore, 5);
+        }
+
+        // 외향성 분석
+        function analyzeExtroversion(text) {
+            const extrovertedWords = ['외향', '외향적', '외향적인', '외향적으로', '외향적인 사람', '외향적인 사람들', '외향적인 사람으로', '외향적인 사람들로'];
+            const introvertedWords = ['내향', '내향적', '내향적인', '내향적으로', '내향적인 사람', '내향적인 사람들', '내향적인 사람으로', '내향적인 사람들로'];
+
+            const extrovertedScore = extrovertedWords.reduce((sum, word) => sum + (text.includes(word) ? 1 : 0), 0);
+            const introvertedScore = introvertedWords.reduce((sum, word) => sum + (text.includes(word) ? 1 : 0), 0);
+
+            return Math.min(extrovertedScore - introvertedScore, 5);
+        }
+
+        // 해결 전략 제시 분석
+        function analyzeSolutionOffered(text) {
+            const solutionWords = ['해결', '해결책', '해결방안', '해결책 제시', '해결책 제시하다', '해결책 제시하다가', '해결책 제시하다가 또'];
+            const noSolutionWords = ['해결 못함', '해결 못하다', '해결 못하다가', '해결 못하다가 또', '해결 못하다가 또 또'];
+
+            const solutionScore = solutionWords.reduce((sum, word) => sum + (text.includes(word) ? 1 : 0), 0);
+            const noSolutionScore = noSolutionWords.reduce((sum, word) => sum + (text.includes(word) ? 1 : 0), 0);
+
+            return Math.min(solutionScore - noSolutionScore, 5);
+        }
+
+        // 복잡도 분석
+        function analyzeComplexity(text) {
+            const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+            const avgLength = sentences.reduce((sum, s) => sum + s.length, 0) / sentences.length;
+            return Math.min(avgLength / 20, 5);
+        }
+
+        // 색상 생성
+        function getColorForIndex(index) {
+            const colors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+                '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+            ];
+            return colors[index % colors.length];
+        }
+
+        // 태그를 텍스트에 하이라이트하는 함수 (뉘앙스 기반)
+        function highlightTagsInText(text, tags) {
+            if (!text || !tags) return text;
+            
+            let highlightedText = text;
+            
+            // 태그별 색상 정의
+            const tagColors = {
+                '감정_방향': '#e3f2fd',      // 파란색
+                '감정_강도': '#e3f2fd',      // 파란색
+                '행동_성향': '#e8f5e8',      // 초록색
+                '관계_지향성': '#fff3e0',    // 주황색
+                '표현_스타일': '#fce4ec'     // 분홍색
+            };
+            
+            // 각 태그에 대해 의미적 하이라이트 수행
+            Object.entries(tags).forEach(([tagKey, tagValue]) => {
+                if (tagValue && typeof tagValue === 'string') {
+                    const color = tagColors[tagKey] || '#f0f0f0';
+                    
+                    // 1. 정확한 태그 값 매칭
+                    if (highlightedText.includes(tagValue)) {
+                        const highlightedValue = `<span style="background-color: ${color}; padding: 2px 4px; border-radius: 4px; font-weight: bold; color: #333; border: 1px solid ${color};" title="태그: ${tagKey}"><strong>${tagValue}</strong></span>`;
+                        highlightedText = highlightedText.replace(new RegExp(escapeRegExp(tagValue), 'g'), highlightedValue);
+                    }
+                    
+                    // 2. 의미적 키워드 매칭 (뉘앙스 기반)
+                    const semanticKeywords = getSemanticKeywords(tagKey, tagValue);
+                    semanticKeywords.forEach(keyword => {
+                        if (highlightedText.includes(keyword) && !highlightedText.includes(`<span style="background-color: ${color}`)) {
+                            const highlightedKeyword = `<span style="background-color: ${color}; padding: 2px 4px; border-radius: 4px; font-weight: bold; color: #333; border: 1px solid ${color}; opacity: 0.8;" title="의미적 태그: ${tagKey}"><strong>${keyword}</strong></span>`;
+                            highlightedText = highlightedText.replace(new RegExp(escapeRegExp(keyword), 'g'), highlightedKeyword);
+                        }
+                    });
+                    
+                    // 3. 문맥적 하이라이트 (문장의 의미 파악)
+                    const contextualPhrases = findContextualPhrases(text, tagKey, tagValue);
+                    contextualPhrases.forEach(phrase => {
+                        if (!highlightedText.includes(`<span style="background-color: ${color}`)) {
+                            const highlightedPhrase = `<span style="background-color: ${color}; padding: 2px 4px; border-radius: 4px; font-weight: bold; color: #333; border: 1px solid ${color}; opacity: 0.6;" title="문맥적 태그: ${tagKey}"><strong>${phrase}</strong></span>`;
+                            highlightedText = highlightedText.replace(new RegExp(escapeRegExp(phrase), 'g'), highlightedPhrase);
+                        }
+                    });
+                }
+            });
+            
+            return highlightedText;
+        }
+
+        // 뉘앙스 기반 의미적 키워드 생성
+        function getSemanticKeywords(tagKey, tagValue) {
+            const semanticMap = {
+                // 감정 관련 태그들
+                'emotion': ['감정', '기분', '느낌', '마음', '심리', '정서', '행복', '슬픔', '화남', '기쁨', '우울', '불안', '짜증', '만족', '좋음', '나쁨', '보통', '평온', '흥분', '차분'],
+                'sentiment': ['감정', '기분', '느낌', '마음', '심리', '정서', '행복', '슬픔', '화남', '기쁨', '우울', '불안', '짜증', '만족', '좋음', '나쁨', '보통', '평온', '흥분', '차분'],
+                'mood': ['감정', '기분', '느낌', '마음', '심리', '정서', '행복', '슬픔', '화남', '기쁨', '우울', '불안', '짜증', '만족', '좋음', '나쁨', '보통', '평온', '흥분', '차분'],
+                'feeling': ['감정', '기분', '느낌', '마음', '심리', '정서', '행복', '슬픔', '화남', '기쁨', '우울', '불안', '짜증', '만족', '좋음', '나쁨', '보통', '평온', '흥분', '차분'],
+                
+                // 행동 관련 태그들
+                'behavior': ['행동', '행위', '활동', '움직임', '반응', '대응', '시도', '노력', '계획', '실행', '해결', '도전', '포기', '지속', '변화', '개선', '발전', '성장', '학습', '적용'],
+                'action': ['행동', '행위', '활동', '움직임', '반응', '대응', '시도', '노력', '계획', '실행', '해결', '도전', '포기', '지속', '변화', '개선', '발전', '성장', '학습', '적용'],
+                'response': ['행동', '행위', '활동', '움직임', '반응', '대응', '시도', '노력', '계획', '실행', '해결', '도전', '포기', '지속', '변화', '개선', '발전', '성장', '학습', '적용'],
+                'reaction': ['행동', '행위', '활동', '움직임', '반응', '대응', '시도', '노력', '계획', '실행', '해결', '도전', '포기', '지속', '변화', '개선', '발전', '성장', '학습', '적용'],
+                
+                // 관계 관련 태그들
+                'relationship': ['관계', '연결', '소통', '교류', '상호작용', '협력', '도움', '지원', '이해', '공감', '배려', '존중', '신뢰', '의존', '독립', '협력', '경쟁', '갈등', '화해', '친밀'],
+                'interaction': ['관계', '연결', '소통', '교류', '상호작용', '협력', '도움', '지원', '이해', '공감', '배려', '존중', '신뢰', '의존', '독립', '협력', '경쟁', '갈등', '화해', '친밀'],
+                'communication': ['관계', '연결', '소통', '교류', '상호작용', '협력', '도움', '지원', '이해', '공감', '배려', '존중', '신뢰', '의존', '독립', '협력', '경쟁', '갈등', '화해', '친밀'],
+                
+                // 표현 관련 태그들
+                'expression': ['표현', '언어', '말', '글', '전달', '설명', '구체적', '상세', '간결', '직설', '우회', '감정적', '이성적', '논리적', '직관적', '창의적', '체계적', '무작위', '정돈된', '산만한'],
+                'language': ['표현', '언어', '말', '글', '전달', '설명', '구체적', '상세', '간결', '직설', '우회', '감정적', '이성적', '논리적', '직관적', '창의적', '체계적', '무작위', '정돈된', '산만한'],
+                'style': ['표현', '언어', '말', '글', '전달', '설명', '구체적', '상세', '간결', '직설', '우회', '감정적', '이성적', '논리적', '직관적', '창의적', '체계적', '무작위', '정돈된', '산만한'],
+                
+                // 한국어 태그들
+                '감정': ['감정', '기분', '느낌', '마음', '심리', '정서', '행복', '슬픔', '화남', '기쁨', '우울', '불안', '짜증', '만족', '좋음', '나쁨', '보통', '평온', '흥분', '차분'],
+                '행동': ['행동', '행위', '활동', '움직임', '반응', '대응', '시도', '노력', '계획', '실행', '해결', '도전', '포기', '지속', '변화', '개선', '발전', '성장', '학습', '적용'],
+                '관계': ['관계', '연결', '소통', '교류', '상호작용', '협력', '도움', '지원', '이해', '공감', '배려', '존중', '신뢰', '의존', '독립', '협력', '경쟁', '갈등', '화해', '친밀'],
+                '표현': ['표현', '언어', '말', '글', '전달', '설명', '구체적', '상세', '간결', '직설', '우회', '감정적', '이성적', '논리적', '직관적', '창의적', '체계적', '무작위', '정돈된', '산만한'],
+                '성향': ['성향', '경향', '특성', '특징', '성격', '성질', '적극적', '소극적', '주도적', '수동적', '직접적', '간접적', '개방적', '폐쇄적', '유연한', '경직된'],
+                '방향': ['방향', '지향', '목표', '의도', '의향', '계획', '향상', '발전', '성장', '진보', '퇴보', '정체', '변화', '안정', '혁신', '보수'],
+                '강도': ['강도', '정도', '수준', '크기', '양', '정량', '강함', '약함', '높음', '낮음', '심함', '덜함', '많음', '적음', '극단적', '보통']
+            };
+            
+            // 태그 키에서 의미 추출
+            const tagMeaning = extractTagMeaning(tagKey);
+            const baseKeywords = semanticMap[tagMeaning] || [];
+            
+            // 태그 값에서도 키워드 추출
+            const valueKeywords = extractValueKeywords(tagValue);
+            
+            return [...new Set([...baseKeywords, ...valueKeywords])];
+        }
+
+        // 태그 키에서 의미 추출
+        function extractTagMeaning(tagKey) {
+            const lowerTag = tagKey.toLowerCase();
+            
+            // 영어 태그 처리
+            if (lowerTag.includes('emotion') || lowerTag.includes('sentiment') || lowerTag.includes('mood') || lowerTag.includes('feeling')) {
+                return 'emotion';
+            }
+            if (lowerTag.includes('behavior') || lowerTag.includes('action') || lowerTag.includes('response') || lowerTag.includes('reaction')) {
+                return 'behavior';
+            }
+            if (lowerTag.includes('relationship') || lowerTag.includes('interaction') || lowerTag.includes('communication')) {
+                return 'relationship';
+            }
+            if (lowerTag.includes('expression') || lowerTag.includes('language') || lowerTag.includes('style')) {
+                return 'expression';
+            }
+            
+            // 한국어 태그 처리
+            if (lowerTag.includes('감정') || lowerTag.includes('기분') || lowerTag.includes('느낌')) {
+                return '감정';
+            }
+            if (lowerTag.includes('행동') || lowerTag.includes('활동') || lowerTag.includes('반응')) {
+                return '행동';
+            }
+            if (lowerTag.includes('관계') || lowerTag.includes('소통') || lowerTag.includes('협력')) {
+                return '관계';
+            }
+            if (lowerTag.includes('표현') || lowerTag.includes('언어') || lowerTag.includes('스타일')) {
+                return '표현';
+            }
+            if (lowerTag.includes('성향') || lowerTag.includes('경향') || lowerTag.includes('특성')) {
+                return '성향';
+            }
+            if (lowerTag.includes('방향') || lowerTag.includes('지향') || lowerTag.includes('목표')) {
+                return '방향';
+            }
+            if (lowerTag.includes('강도') || lowerTag.includes('정도') || lowerTag.includes('수준')) {
+                return '강도';
+            }
+            
+            return 'general';
+        }
+
+        // 태그 값에서 키워드 추출
+        function extractValueKeywords(tagValue) {
+            const keywords = [];
+            const lowerValue = tagValue.toLowerCase();
+            
+            // 감정 관련 키워드
+            if (lowerValue.includes('긍정') || lowerValue.includes('positive') || lowerValue.includes('좋음') || lowerValue.includes('만족')) {
+                keywords.push('긍정', '좋음', '만족', '행복', '기쁨', '즐거움', '희망', '감사', '감동', '설렘');
+            }
+            if (lowerValue.includes('부정') || lowerValue.includes('negative') || lowerValue.includes('나쁨') || lowerValue.includes('불만')) {
+                keywords.push('부정', '나쁨', '불만', '슬픔', '화남', '짜증', '우울', '불안', '걱정', '두려움');
+            }
+            if (lowerValue.includes('중립') || lowerValue.includes('neutral') || lowerValue.includes('보통') || lowerValue.includes('일반')) {
+                keywords.push('중립', '보통', '일반', '평온', '차분', '안정', '조용', '평범', '보편적');
+            }
+            
+            // 강도 관련 키워드
+            if (lowerValue.includes('강함') || lowerValue.includes('높음') || lowerValue.includes('strong') || lowerValue.includes('심함')) {
+                keywords.push('강함', '높음', '심함', '극단적', '많음', '충분', '완전', '절대적', '극도');
+            }
+            if (lowerValue.includes('약함') || lowerValue.includes('낮음') || lowerValue.includes('weak') || lowerValue.includes('덜함')) {
+                keywords.push('약함', '낮음', '덜함', '적음', '부족', '미미', '희박', '희미', '연약');
+            }
+            
+            // 행동 관련 키워드
+            if (lowerValue.includes('적극') || lowerValue.includes('active') || lowerValue.includes('주도') || lowerValue.includes('직접')) {
+                keywords.push('적극', '주도', '직접', '적극적', '주도적', '직접적', '적극적으로', '주도적으로', '직접적으로');
+            }
+            if (lowerValue.includes('소극') || lowerValue.includes('passive') || lowerValue.includes('수동') || lowerValue.includes('간접')) {
+                keywords.push('소극', '수동', '간접', '소극적', '수동적', '간접적', '소극적으로', '수동적으로', '간접적으로');
+            }
+            
+            // 관계 관련 키워드
+            if (lowerValue.includes('협력') || lowerValue.includes('cooperative') || lowerValue.includes('도움')) {
+                keywords.push('협력', '도움', '지원', '배려', '이해', '공감', '협력적', '도움이 되는', '지지하는');
+            }
+            if (lowerValue.includes('경쟁') || lowerValue.includes('competitive') || lowerValue.includes('갈등')) {
+                keywords.push('경쟁', '갈등', '대립', '충돌', '경쟁적', '갈등적', '대립적', '충돌적');
+            }
+            
+            // 표현 관련 키워드
+            if (lowerValue.includes('직설') || lowerValue.includes('direct') || lowerValue.includes('구체적')) {
+                keywords.push('직설', '구체적', '상세', '명확', '직설적', '구체적으로', '상세하게', '명확하게');
+            }
+            if (lowerValue.includes('우회') || lowerValue.includes('indirect') || lowerValue.includes('간결')) {
+                keywords.push('우회', '간결', '간단', '요약', '우회적', '간결하게', '간단하게', '요약적으로');
+            }
+            
+            return keywords;
+        }
+
+        // 문맥적 구문 찾기 (뉘앙스 기반)
+        function findContextualPhrases(text, tagKey, tagValue) {
+            const matches = [];
+            const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+            
+            sentences.forEach(sentence => {
+                // 태그의 의미와 관련된 문장 찾기
+                if (isContextuallyRelevant(sentence, tagKey, tagValue)) {
+                    // 문장에서 핵심 부분 추출 (너무 길지 않게)
+                    const words = sentence.trim().split(/\s+/);
+                    if (words.length > 3) {
+                        // 문장의 중간 부분을 선택 (시작과 끝은 제외)
+                        const start = Math.floor(words.length * 0.2);
+                        const end = Math.floor(words.length * 0.8);
+                        const keyPart = words.slice(start, end).join(' ');
+                        if (keyPart.length > 5) {
+                            matches.push(keyPart);
+                        }
+                    } else {
+                        matches.push(sentence.trim());
+                    }
+                }
+            });
+            
+            return matches.slice(0, 2); // 최대 2개까지만 반환
+        }
+
+        // 문맥적 관련성 판단
+        function isContextuallyRelevant(sentence, tagKey, tagValue) {
+            const lowerSentence = sentence.toLowerCase();
+            const lowerTagKey = tagKey.toLowerCase();
+            const lowerTagValue = tagValue.toLowerCase();
+            
+            // 태그 키와 관련된 단어들이 문장에 포함되어 있는지 확인
+            const relevantWords = {
+                'emotion': ['감정', '기분', '느낌', '마음', '심리', '정서', '행복', '슬픔', '화남', '기쁨', '우울', '불안', '짜증', '만족', '좋음', '나쁨', '보통', '평온', '흥분', '차분', '걱정', '두려움', '설렘', '감동', '감사', '희망', '즐거움'],
+                'behavior': ['행동', '행위', '활동', '움직임', '반응', '대응', '시도', '노력', '계획', '실행', '해결', '도전', '포기', '지속', '변화', '개선', '발전', '성장', '학습', '적용', '시작', '끝', '계속', '멈춤', '바꿈', '고치다', '만들다', '하다'],
+                'relationship': ['관계', '연결', '소통', '교류', '상호작용', '협력', '도움', '지원', '이해', '공감', '배려', '존중', '신뢰', '의존', '독립', '경쟁', '갈등', '화해', '친밀', '친구', '가족', '동료', '이웃', '사람', '누군가', '함께', '혼자'],
+                'expression': ['표현', '언어', '말', '글', '전달', '설명', '구체적', '상세', '간결', '직설', '우회', '감정적', '이성적', '논리적', '직관적', '창의적', '체계적', '무작위', '정돈된', '산만한', '이야기', '설명', '전달', '알리다', '말하다', '쓰다']
+            };
+            
+            // 태그 키의 의미 파악
+            let tagCategory = 'general';
+            for (const [category, words] of Object.entries(relevantWords)) {
+                if (words.some(word => lowerTagKey.includes(word) || lowerTagValue.includes(word))) {
+                    tagCategory = category;
+                    break;
+                }
+            }
+            
+            // 문장이 해당 카테고리와 관련있는지 확인
+            const categoryWords = relevantWords[tagCategory] || [];
+            return categoryWords.some(word => lowerSentence.includes(word));
+        }
+
+        // 정규식 특수문자 이스케이프 함수
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // 히트맵 생성
+        /* function generateHeatmap() {
+            const container = document.getElementById('heatmapContent');
+            
+            if (!currentExperiment || !currentExperiment.prefs) {
+                container.innerHTML = '<div class="info-box">실험 데이터를 먼저 로드해주세요.</div>';
+                return;
+            }
+            
+            // 실제 데이터로 히트맵 생성
+            const heatmapData = generateHeatmapDataFromExperiment();
+            
+            if (heatmapData.length === 0) {
+                container.innerHTML = '<div class="info-box">히트맵 데이터를 생성할 수 없습니다.</div>';
+                return;
+            }
+            
+            let html = '<table class="heatmap-table">';
+            html += '<thead><tr><th>페르소나</th>';
+            
+            // 의미 축 헤더
+            const dimensions = getAvailableDimensions();
+            dimensions.forEach(dim => {
+                html += `<th>${dim}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            
+            // 데이터 행
+            heatmapData.forEach(row => {
+                html += `<tr><td><strong>${row.personality}</strong></td>`;
+                row.values.forEach(value => {
+                    const intensity = Math.min(5, Math.max(0, value));
+                    const color = getHeatmapColor(intensity);
+                    html += `<td><div class="heatmap-cell" style="background-color: ${color}">${intensity.toFixed(1)}</div></td>`;
+                });
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        } */
+
+        // 실험 데이터에서 히트맵 데이터 생성
+        function generateHeatmapDataFromExperiment() {
+            const data = [];
+            const dimensions = getAvailableDimensions();
+            
+            // 각 페르소나별로 데이터 수집
+            const personalities = [];
+            currentExperiment.prompts.forEach(prompt => {
+                if (prompt.personality && !personalities.includes(prompt.personality)) {
+                    personalities.push(prompt.personality);
+                }
+            });
+            
+            personalities.forEach(personality => {
+                const values = [];
+                dimensions.forEach(dimension => {
+                    const value = analyzeResponseValue(personality, dimension);
+                    values.push(value);
+                });
+                
+                data.push({
+                    personality: personality,
+                    values: values
+                });
+            });
+            
+            return data;
+        }
+
+        // 사용 가능한 의미 축 목록
+        function getAvailableDimensions() {
+            return [
+                'emotional_intensity',
+                'valence',
+                'expression_type',
+                'agency',
+                'extroversion',
+                'solution_offered',
+                'response_length',
+                'complexity'
+            ];
+        }
+
+        // 축별 정렬 리스트 생성
+        async function generateSortingList() {
+            console.log('🚀 generateSortingList 함수 시작');
+            
+            const container = document.getElementById('sortingListContent');
+            console.log('sortingListContent 컨테이너:', container);
+            
+            if (!container) {
+                console.error('❌ sortingListContent 요소를 찾을 수 없음');
+                return;
+            }
+            
+            console.log('currentExperiment:', currentExperiment);
+            console.log('currentDimension:', currentDimension);
+            
+            if (!currentExperiment || !currentDimension) {
+                console.log('❌ 필수 데이터 누락');
+                container.innerHTML = '<div class="info-box">실험과 의미 축을 선택해주세요.</div>';
+                return;
+            }
+            
+            // 프론트엔드에서 직접 차트 생성 (백엔드 API 호출 없이)
+            console.log('🔄 프론트엔드에서 직접 차트 생성 시작');
+            const sortingData = generateSortingDataFromExperiment();
+            console.log('생성된 정렬 데이터:', sortingData);
+            console.log('정렬 데이터 길이:', sortingData.length);
+            
+            if (sortingData.length === 0) {
+                console.log('❌ 정렬 데이터가 비어있음');
+                container.innerHTML = '<div class="info-box">정렬 데이터를 생성할 수 없습니다. 실험 데이터를 확인해주세요.</div>';
+                return;
+            }
+            
+            // 값에 따라 정렬
+            sortingData.sort((a, b) => b.value - a.value);
+            
+            // 막대 차트 생성 (Plotly 사용)
+            const chartData = [{
+                x: sortingData.map(item => item.personality),
+                y: sortingData.map(item => item.value),
+                type: 'bar',
+                marker: {
+                    color: sortingData.map((item, index) => 
+                        index < 3 ? '#FF6384' : '#36A2EB'
+                    ),
+                    opacity: 0.8
+                },
+                text: sortingData.map(item => item.value.toFixed(2)),
+                textposition: 'auto',
+                hovertemplate: '<b>%{x}</b><br>값: %{y:.2f}<extra></extra>'
+            }];
+            
+            const layout = {
+                title: `${currentDimension || '의미 축'} 기준 정렬`,
+                xaxis: { title: '' },  // x축 제목 제거
+                yaxis: { title: '점수' },
+                showlegend: false,
+                margin: { l: 60, r: 30, t: 60, b: 80 }
+            };
+            
+            // 차트 컨테이너 준비
+            console.log('차트 컨테이너 준비 중...');
+            let chartContainer = document.getElementById('sortingContent');
+            console.log('sortingContent 컨테이너:', chartContainer);
+            
+            if (!chartContainer) {
+                console.log('⚠️ sortingContent 요소가 없어 새로 생성');
+                // sortingContent가 없으면 새로 생성
+                chartContainer = document.createElement('div');
+                chartContainer.id = 'sortingContent';
+                chartContainer.className = 'chart-container';
+                chartContainer.style.marginTop = '20px';
+                
+                // 축별 정렬 차트 섹션에 추가
+                const sortingSection = document.querySelector('.visualization-section');
+                if (sortingSection) {
+                    sortingSection.appendChild(chartContainer);
+                    console.log('✅ sortingContent 컨테이너 새로 생성됨');
+                } else {
+                    console.error('❌ visualization-section을 찾을 수 없음');
+                    return;
+                }
+            }
+            
+            chartContainer.innerHTML = '<div id="sortingChart"></div>';
+            console.log('✅ 차트 컨테이너 준비 완료');
+            
+            // 새 차트 생성
+            console.log('Plotly 차트 생성 시작');
+            console.log('차트 데이터:', chartData);
+            console.log('차트 레이아웃:', layout);
+            
+            try {
+                Plotly.newPlot('sortingChart', chartData, layout, {responsive: true});
+                console.log('✅ Plotly 차트 생성 완료');
+            } catch (error) {
+                console.error('❌ Plotly 차트 생성 실패:', error);
+                // 차트 생성 실패 시 간단한 HTML로 대체
+                chartContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <h3>${getDimensionDisplayName(currentDimension)} 기준 정렬</h3>
+                        <div style="margin-top: 20px;">
+                            ${sortingData.map((item, index) => `
+                                <div style="margin: 10px 0; padding: 10px; background: ${index < 3 ? '#FF6384' : '#36A2EB'}; color: white; border-radius: 5px;">
+                                    ${index + 1}위: ${item.personality} (${item.value.toFixed(2)})
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                console.log('✅ HTML 차트로 대체 완료');
+            }
+            
+            // 정렬 리스트도 함께 표시 (상위 3개만 먼저 표시)
+            let html = '<div class="sorting-list" style="margin-top: 20px;">';
+            html += `<h4>📊 ${getDimensionDisplayName(currentDimension)} 기준 순위</h4>`;
+            html += '<div class="sorting-items" id="sortingItemsContainer">';
+            
+            // 상위 3개만 먼저 표시
+            const top3Items = sortingData.slice(0, 3);
+            top3Items.forEach((item, index) => {
+                const rank = index + 1;
+                const rankClass = rank <= 3 ? 'top-rank' : '';
+                html += `
+                    <div class="sorting-item ${rankClass}">
+                        <span class="rank">${rank}</span>
+                        <span class="personality">${item.personality}</span>
+                        <span class="value">${item.value.toFixed(2)}</span>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            // 4위 이하가 있는 경우 더보기 버튼 추가
+            if (sortingData.length > 3) {
+                html += `
+                    <div class="show-more-container" style="text-align: center; margin-top: 20px;">
+                        <button id="showMoreBtn" class="show-more-btn" onclick="toggleSortingList()">
+                            📋 더보기 (${sortingData.length - 3}개 더)
+                        </button>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
+            
+            // 정렬 데이터를 전역 변수로 저장 (더보기 기능용)
+            window.currentSortingData = sortingData;
+            
+            // 축별 정렬 차트 생성 완료 후 로딩 상태 제거
+            const loadingChartContainer = document.querySelector('.chart-container');
+            if (loadingChartContainer) {
+                loadingChartContainer.classList.remove('loading');
+            }
+            
+            console.log('✅ 정렬 차트 및 리스트 생성 완료');
+        }
+
+        // 실험 데이터에서 정렬 데이터 생성
+        function generateSortingDataFromExperiment() {
+            const data = [];
+            console.log('generateSortingDataFromExperiment 시작');
+            console.log('currentExperiment 구조:', Object.keys(currentExperiment));
+            
+            // 올바른 데이터 구조 확인
+            if (!currentExperiment.history || currentExperiment.history.length === 0) {
+                console.error('❌ currentExperiment.history가 없습니다');
+                return data;
+            }
+            
+            const firstHistory = currentExperiment.history[0];
+            console.log('firstHistory 구조:', Object.keys(firstHistory));
+            
+            // 각 페르소나별로 값 계산
+            const personalities = [];
+            
+            // answers에서 페르소나 추출
+            if (firstHistory.answers && firstHistory.answers.length > 0) {
+                firstHistory.answers.forEach(answer => {
+                    if (answer.personality && !personalities.includes(answer.personality)) {
+                        personalities.push(answer.personality);
+                    }
+                });
+            }
+            
+            // prompts에서도 페르소나 추출 (백업)
+            if (firstHistory.prompts && firstHistory.prompts.length > 0) {
+                firstHistory.prompts.forEach(prompt => {
+                    if (prompt.personality && !personalities.includes(prompt.personality)) {
+                        personalities.push(prompt.personality);
+                    }
+                });
+            }
+            
+            console.log('찾은 페르소나들:', personalities);
+            
+            // 만약 페르소나를 찾을 수 없다면 샘플 데이터 생성
+            if (personalities.length === 0) {
+                console.log('⚠️ 페르소나를 찾을 수 없어 샘플 데이터 생성');
+                personalities.push('페르소나 A', '페르소나 B', '페르소나 C', '페르소나 D');
+            }
+            
+            personalities.forEach(personality => {
+                const value = analyzeResponseValue(personality, currentDimension);
+                console.log(`${personality}: ${value}`);
+                data.push({
+                    personality: personality,
+                    value: value
+                });
+            });
+            
+            console.log('최종 데이터:', data);
+            return data;
+        }
+
+        // 의미 축 표시 이름 가져오기
+        function getDimensionDisplayName(dimension) {
+            const displayNames = {
+                'emotional_intensity': '감정 강도',
+                'valence': '정서 방향',
+                'expression_type': '표현 스타일',
+                'agency': '자기 주도성',
+                'extroversion': '외향성',
+                'solution_offered': '해결 전략 제시',
+                'response_length': '응답 길이',
+                'complexity': '응답 복잡도'
+            };
+            
+            if (dimension.startsWith('temperament_')) {
+                const key = dimension.replace('temperament_', '');
+                return `기질: ${key}`;
+            } else if (dimension.startsWith('character_')) {
+                const key = dimension.replace('character_', '');
+                return `성격: ${key}`;
+            }
+            
+            return displayNames[dimension] || dimension;
+        }
+
+        // 샘플 레이더 차트 데이터 생성
+        function generateSampleRadarData() {
+            const labels = ['감정 강도', '정서 방향', '자기 주도성', '사회적 지향성', '대처 방식'];
+            
+            return [
+                {
+                    type: 'scatterpolar',
+                    mode: 'lines+markers',
+                    name: '페르소나 A',
+                    r: [4, 3, 5, 2, 4],
+                    theta: labels,
+                    line: {
+                        color: '#8E12D5',
+                        width: 3
+                    },
+                    marker: {
+                        color: '#8E12D5',
+                        size: 10,
+                        symbol: 'circle'
+                    },
+                    fill: 'toself',
+                    fillcolor: '#8E12D540',
+                    opacity: 0.6
+                },
+                {
+                    type: 'scatterpolar',
+                    mode: 'lines+markers',
+                    name: '페르소나 B',
+                    r: [2, 4, 3, 5, 3],
+                    theta: labels,
+                    line: {
+                        color: '#6a0dad',
+                        width: 3
+                    },
+                    marker: {
+                        color: '#6a0dad',
+                        size: 10,
+                        symbol: 'circle'
+                    },
+                    fill: 'toself',
+                    fillcolor: '#6a0dad40',
+                    opacity: 0.6
+                },
+                {
+                    type: 'scatterpolar',
+                    mode: 'lines+markers',
+                    name: '페르소나 C',
+                    r: [5, 2, 4, 3, 5],
+                    theta: labels,
+                    line: {
+                        color: '#ff6b6b',
+                        width: 3
+                    },
+                    marker: {
+                        color: '#ff6b6b',
+                        size: 10,
+                        symbol: 'circle'
+                    },
+                    fill: 'toself',
+                    fillcolor: '#ff6b6b40',
+                    opacity: 0.6
+                }
+            ];
+        }
+
+        // 샘플 히트맵 데이터 생성
+        function generateSampleHeatmapData() {
+            return [
+                { question: '질문 1', values: [4.2, 3.8, 4.5, 2.1, 3.9] },
+                { question: '질문 2', values: [3.1, 4.7, 3.2, 4.8, 3.5] },
+                { question: '질문 3', values: [4.8, 2.9, 4.1, 3.6, 4.3] }
+            ];
+        }
+
+        // 샘플 정렬 데이터 생성
+        function generateSampleSortingData() {
+            return {
+                '감정 강도 (높은 순)': [
+                    { name: '페르소나 C', score: 4.8 },
+                    { name: '페르소나 A', score: 4.2 },
+                    { name: '페르소나 B', score: 3.1 }
+                ],
+                '자기 주도성 (높은 순)': [
+                    { name: '페르소나 A', score: 4.5 },
+                    { name: '페르소나 C', score: 4.1 },
+                    { name: '페르소나 B', score: 3.2 }
+                ],
+                '사회적 지향성 (높은 순)': [
+                    { name: '페르소나 B', score: 4.8 },
+                    { name: '페르소나 C', score: 3.6 },
+                    { name: '페르소나 A', score: 2.1 }
+                ]
+            };
+        }
+
+        // 히트맵 색상 생성
+        function getHeatmapColor(intensity) {
+            const normalized = intensity / 5; // 0-5 범위를 0-1로 정규화
+            const red = Math.round(255 * (1 - normalized));
+            const green = Math.round(255 * normalized);
+            const blue = 100;
+            return `rgb(${red}, ${green}, ${blue})`;
+        }
+
+        // 차트 초기화
+        function clearVisualizations() {
+            console.log('🧹 clearVisualizations 호출됨 - 모든 시각화 초기화');
+            
+            // 레이더 차트 초기화
+            if (currentRadarChart) {
+                Plotly.purge('radarChart');
+                currentRadarChart = null;
+            }
+            
+            // 히트맵 섹션이 주석처리되어 있으므로 안전하게 처리
+            // const heatmapContent = document.getElementById('heatmapContent');
+            // if (heatmapContent) {
+            //     heatmapContent.innerHTML = `
+            //     <div class="info-box">
+            //         <strong>💡 히트맵 사용법:</strong> 질문과 의미 축을 선택한 후 분석을 시작하면, 
+            //         페르소나별 응답을 색상 강도로 시각화하여 경향성을 한눈에 파악할 수 있습니다.
+            //     </div>
+            // `;
+            // }
+            
+            // // 정렬 차트 초기화
+            // document.getElementById('sortingContent').innerHTML = `
+            //     <div class="info-box">
+            //         <strong>💡 정렬 차트 사용법:</strong> 의미 축을 선택하면 해당 축에 따라 
+            //         페르소나들을 정렬하여 막대 차트로 보여줍니다. "자기주도성이 높은 순", "감정 강도가 낮은 순" 등으로 확인할 수 있습니다.
+            //     </div>
+            // `;
+            
+            // // 정렬 리스트 초기화
+            // document.getElementById('sortingListContent').innerHTML = `
+            //     <div class="info-box">
+            //         <strong>💡 정렬 리스트 사용법:</strong> 의미 축을 선택하면 해당 축에 따라 
+            //         페르소나들을 순위별로 정렬하여 보여줍니다. "자기주도성이 높은 순", "감정 강도가 낮은 순" 등으로 확인할 수 있습니다.
+            //     </div>
+            // `;
+            
+            // 정렬 리스트 섹션 숨기기
+            const sortingListSection = document.getElementById('sortingListSection');
+            if (sortingListSection) {
+                sortingListSection.style.display = 'none';
+            }
+            
+            // 구조화된 분석 결과 초기화
+            const structuredAnalysisContent = document.getElementById('structuredAnalysisContent');
+            if (structuredAnalysisContent) {
+                structuredAnalysisContent.style.display = 'none';
+            }
+            
+            // Diff 섹션 초기화
+            const diffContent = document.getElementById('diffContent');
+            if (diffContent) {
+                diffContent.style.display = 'none';
+            }
+            
+            // Diff 섹션의 페르소나 선택 초기화
+            const personaA = document.getElementById('personaA');
+            const personaB = document.getElementById('personaB');
+            if (personaA) personaA.value = '';
+            if (personaB) personaB.value = '';
+            
+            // 전역 변수들 초기화
+            window.currentSortingData = null;
+            
+            console.log('✅ 모든 시각화 초기화 완료');
+        }
+
+        // 페르소나 목록 로드 (Diff용)
+        function loadPersonasForDiff() {
+            const personaA = document.getElementById('personaA');
+            const personaB = document.getElementById('personaB');
+            
+            // DOM 요소가 존재하는지 확인
+            if (!personaA || !personaB) {
+                console.log('❌ 페르소나 선택 요소를 찾을 수 없음');
+                return;
+            }
+            
+            // 기존 옵션 제거
+            personaA.innerHTML = '<option value="">선택하세요</option>';
+            personaB.innerHTML = '<option value="">선택하세요</option>';
+            
+            if (currentExperiment && currentExperiment.history && currentExperiment.history.length > 0) {
+                // 다양한 데이터 구조에서 페르소나 추출
+                let personas = [];
+                
+                console.log('실험 데이터 구조 분석:', currentExperiment.history[0]);
+                
+                if (currentExperiment.history[0].prompts) {
+                    console.log('Prompts 구조 발견');
+                    personas = [...new Set(currentExperiment.history[0].prompts.map(p => {
+                        const personality = p.personality || p.persona || p.name || 'Unknown';
+                        console.log('Prompt 페르소나:', { 
+                            personality, 
+                            has_answer: !!p.answer, 
+                            has_qa: !!p.qa,
+                            has_response: !!p.response,
+                            has_text: !!p.text
+                        });
+                        return personality;
+                    }))];
+                } else if (currentExperiment.history[0].answers) {
+                    console.log('Answers 구조 발견');
+                    personas = [...new Set(currentExperiment.history[0].answers.map(a => {
+                        const personality = a.personality || a.persona || a.name || 'Unknown';
+                        console.log('Answer 페르소나:', { 
+                            personality, 
+                            has_answer: !!a.answer, 
+                            has_qa: !!a.qa,
+                            has_response: !!a.response,
+                            has_text: !!a.text
+                        });
+                        return personality;
+                    }))];
+                } else {
+                    console.log('❌ prompts 또는 answers 구조를 찾을 수 없음');
+                    console.log('사용 가능한 키들:', Object.keys(currentExperiment.history[0]));
+                }
+                
+                // 'Unknown' 제거
+                personas = personas.filter(p => p !== 'Unknown');
+                
+                console.log('추출된 페르소나 목록:', personas);
+                
+                if (personas.length > 0) {
+                    personas.forEach(persona => {
+                        // 페르소나 A 옵션 추가
+                        const optA = document.createElement('option');
+                        optA.value = persona;
+                        optA.textContent = persona;
+                        personaA.appendChild(optA);
+                        
+                        // 페르소나 B 옵션 추가 (복사)
+                        const optB = document.createElement('option');
+                        optB.value = persona;
+                        optB.textContent = persona;
+                        personaB.appendChild(optB);
+                    });
+                    
+                    console.log('✅ Diff용 페르소나 목록 로드 완료:', personas);
+                } else {
+                    console.log('⚠️ 페르소나 데이터가 없습니다');
+                    // 사용자에게 안내 메시지 표시
+                    const diffSection = document.getElementById('diffSection');
+                    if (diffSection) {
+                        const infoDiv = diffSection.querySelector('.info-box') || document.createElement('div');
+                        if (!diffSection.querySelector('.info-box')) {
+                            infoDiv.className = 'info-box';
+                            infoDiv.style.cssText = 'background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 15px; border-radius: 8px; margin-bottom: 20px;';
+                            diffSection.insertBefore(infoDiv, diffSection.firstChild);
+                        }
+                        infoDiv.innerHTML = '<strong>💡 안내:</strong> 선택한 실험에 페르소나 데이터가 없습니다. 다른 실험을 선택해주세요.';
+                    }
+                }
+            } else {
+                console.log('❌ currentExperiment 또는 history 데이터 없음');
+                // 사용자에게 안내 메시지 표시
+                const diffSection = document.getElementById('diffSection');
+                if (diffSection) {
+                    const infoDiv = diffSection.querySelector('.info-box') || document.createElement('div');
+                    if (!diffSection.querySelector('.info-box')) {
+                        infoDiv.className = 'info-box';
+                        infoDiv.style.cssText = 'background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 15px; border-radius: 8px; margin-bottom: 20px;';
+                        diffSection.insertBefore(infoDiv, diffSection.firstChild);
+                    }
+                    infoDiv.innerHTML = '<strong>💡 안내:</strong> 실험을 먼저 선택해주세요.';
+                }
+            }
+        }
+        
+        // Diff 섹션 표시/숨김 토글
+        function toggleDiffSection() {
+            const diffSection = document.getElementById('diffSection');
+            if (diffSection) {
+                if (diffSection.style.display === 'none' || diffSection.style.display === '') {
+                    diffSection.style.display = 'block';
+                    // 페르소나 목록 로드
+                    loadPersonasForDiff();
+                    console.log('✅ Diff 섹션 표시됨');
+                } else {
+                    diffSection.style.display = 'none';
+                    console.log('🔄 Diff 섹션 숨김');
+                }
+            }
+        }
+
+        // Side-by-Side Diff 생성
+        async function generateDiff() {
+            const personaA = document.getElementById('personaA').value;
+            const personaB = document.getElementById('personaB').value;
+            const questionIndex = document.getElementById('questionSelect').value;
+            
+            if (!personaA || !personaB) {
+                alert('두 페르소나를 모두 선택해주세요.');
+                return;
+            }
+            
+            if (personaA === personaB) {
+                alert('서로 다른 페르소나를 선택해주세요.');
+                return;
+            }
+            
+            if (questionIndex === '') {
+                alert('질문을 선택해주세요.');
+                return;
+            }
+            
+            // 디버깅 정보 출력
+            console.log('Diff 요청 데이터:', {
+                persona_a: personaA,
+                persona_b: personaB,
+                question_index: questionIndex,
+                experiment_data: currentExperiment
+            });
+            
+            // 실험 데이터 구조 확인
+            if (currentExperiment && currentExperiment.history && currentExperiment.history.length > 0) {
+                const history = currentExperiment.history[0];
+                console.log('실험 데이터 구조 상세 분석:');
+                console.log('최상위 키들:', Object.keys(currentExperiment));
+                console.log('history[0] 키들:', Object.keys(history));
+                console.log('history[0] 타입:', typeof history);
+                
+                // history[0]의 각 키 분석
+                for (const [key, value] of Object.entries(history)) {
+                    if (Array.isArray(value)) {
+                        console.log(`🔍 ${key}: 배열 (길이: ${value.length})`);
+                        if (value.length > 0) {
+                            console.log(`🔍 ${key}[0] 샘플:`, value[0]);
+                        }
+                    } else {
+                        console.log(`🔍 ${key}: ${typeof value} =`, value);
+                    }
+                }
+                
+                // prompts나 answers가 있는지 확인
+                if (history.prompts) {
+                    console.log('🔍 Prompts 데이터 샘플:', history.prompts.slice(0, 2));
+                }
+                if (history.answers) {
+                    console.log('🔍 Answers 데이터 샘플:', history.answers.slice(0, 2));
+                }
+                
+                // 페르소나 데이터가 어디에 있는지 찾기
+                let personaData = null;
+                if (history.prompts) {
+                    personaData = history.prompts;
+                    console.log('✅ Prompts에서 페르소나 데이터 찾음');
+                } else if (history.answers) {
+                    personaData = history.answers;
+                    console.log('✅ Answers에서 페르소나 데이터 찾음');
+                } else if (Array.isArray(history)) {
+                    personaData = history;
+                    console.log('✅ History[0]이 배열로 페르소나 데이터 찾음');
+                } else {
+                    console.log('❌ 페르소나 데이터를 찾을 수 없음');
+                }
+                
+                if (personaData) {
+                    console.log('🔍 페르소나 데이터 개수:', personaData.length);
+                    console.log('🔍 첫 번째 페르소나 샘플:', personaData[0]);
+                }
+            }
+            
+            // 로딩 상태 표시
+            const diffAnalyzeBtn = document.getElementById('diffAnalyzeBtn');
+            const diffLoading = document.getElementById('diffLoading');
+            if (diffAnalyzeBtn && diffLoading) {
+                diffAnalyzeBtn.disabled = true;
+                diffAnalyzeBtn.style.backgroundColor = '#6c757d';
+                diffLoading.style.display = 'inline';
+            }
+            
+            try {
+                const response = await fetch('/visualization/diff', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        experiment_data: currentExperiment,
+                        question_index: parseInt(questionIndex),
+                        persona_a: personaA,
+                        persona_b: personaB
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    displayDiffResult(result.data);
+                } else {
+                    const error = await response.json();
+                    console.error('❌ Diff API 오류:', error);
+                    alert(`Diff 생성 실패: ${error.detail}`);
+                }
+            } catch (error) {
+                console.error('Diff 생성 중 오류:', error);
+                alert('Diff 생성 중 오류가 발생했습니다.');
+            } finally {
+                // 로딩 상태 해제
+                const diffAnalyzeBtn = document.getElementById('diffAnalyzeBtn');
+                const diffLoading = document.getElementById('diffLoading');
+                if (diffAnalyzeBtn && diffLoading) {
+                    diffAnalyzeBtn.disabled = false;
+                    diffAnalyzeBtn.style.backgroundColor = '#007bff';
+                    diffLoading.style.display = 'none';
+                }
+            }
+        }
+
+        // Diff 결과 표시
+        function displayDiffResult(diffData) {
+            // 질문 표시
+            document.getElementById('diffQuestion').textContent = diffData.question;
+            
+            // 페르소나 이름과 응답 표시
+            document.getElementById('personaAName').textContent = `페르소나 ${diffData.persona_a}`;
+            document.getElementById('personaBName').textContent = `페르소나 ${diffData.persona_b}`;
+            document.getElementById('responseA').textContent = diffData.response_a;
+            document.getElementById('responseB').textContent = diffData.response_b;
+            
+            // 유사도 점수 표시
+            const similarityPercent = Math.round(diffData.similarity_score * 100);
+            document.getElementById('similarityValue').innerHTML = `
+                <span style="color: ${similarityPercent > 70 ? '#4caf50' : similarityPercent > 40 ? '#ff9800' : '#f44336'}">
+                    ${similarityPercent}%
+                </span>
+            `;
+            
+            // 의미 축별 차이 표시
+            displayDimensionDiffs(diffData.dimension_differences);
+            
+            // 차이점 하이라이트 표시
+            displayDiffHighlights(diffData.diff_highlights);
+            
+            // 요약 표시
+            document.getElementById('diffSummaryContent').textContent = diffData.summary;
+            
+            // 결과 표시
+            document.getElementById('diffContent').style.display = 'block';
+        }
+
+        // 의미 축별 차이 표시
+        function displayDimensionDiffs(dimensionDiffs) {
+            const container = document.getElementById('dimensionDiffsContent');
+            let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">';
+            
+            for (const [dimension, diff] of Object.entries(dimensionDiffs)) {
+                const dimName = getDimensionDisplayName(dimension);
+                const diffColor = diff.difference_level === '큰 차이' ? '#f44336' : 
+                                diff.difference_level === '중간 차이' ? '#ff9800' : '#4caf50';
+                
+                html += `
+                    <div style="background-color: white; padding: 15px; border-radius: 8px; border-left: 4px solid ${diffColor};">
+                        <h5 style="margin-top: 0; color: #333;">${dimName}</h5>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>페르소나 A: <strong>${diff.value_a}</strong></span>
+                            <span>페르소나 B: <strong>${diff.value_b}</strong></span>
+                        </div>
+                        <div style="text-align: center; padding: 8px; background-color: #f5f5f5; border-radius: 4px;">
+                            <span style="color: ${diffColor}; font-weight: bold;">
+                                차이: ${diff.difference} (${diff.difference_percentage}%)
+                            </span>
+                            <br>
+                            <small style="color: #666;">${diff.difference_level} | ${diff.trend}</small>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // 차이점 하이라이트 표시
+        function displayDiffHighlights(diffHighlights) {
+            const container = document.getElementById('diffHighlightsContent');
+            let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">';
+            
+            // 공통 단어
+            if (diffHighlights.common_words && diffHighlights.common_words.length > 0) {
+                html += `
+                    <div style="background-color: white; padding: 15px; border-radius: 8px; border-left: 4px solid #4caf50;">
+                        <h5 style="margin-top: 0; color: #333;font-size: 20px;">공통 단어</h5>
+                        <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                            ${diffHighlights.common_words.map(word => `<span style="background-color: #e8f5e8; padding: 4px 8px; border-radius: 12px; font-size: 12px;">${word}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // 페르소나 A 고유 단어
+            if (diffHighlights.unique_a && diffHighlights.unique_a.length > 0) {
+                html += `
+                    <div style="background-color: white; padding: 15px; border-radius: 8px; border-left: 4px solid #1976d2;">
+                        <h5 style="margin-top: 0; color: #333; font-size: 20px;">👤 ${document.getElementById('personaA').value} 고유 단어</h5>
+                        <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                            ${diffHighlights.unique_a.map(word => `<span style="background-color: #e3f2fd; padding: 4px 8px; border-radius: 12px; font-size: 12px;">${word}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // 페르소나 B 고유 단어
+            if (diffHighlights.unique_b && diffHighlights.unique_b.length > 0) {
+                html += `
+                    <div style="background-color: white; padding: 15px; border-radius: 8px; border-left: 4px solid #7b1fa2;">
+                        <h5 style="margin-top: 0; color: #333; font-size: 20px;">👤 ${document.getElementById('personaB').value} 고유 단어</h5>
+                        <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                            ${diffHighlights.unique_b.map(word => `<span style="background-color: #f3e5f5; padding: 4px 8px; border-radius: 12px; font-size: 12px;">${word}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // 감정 키워드 분석
+            if (diffHighlights.emotion_a || diffHighlights.emotion_b) {
+                html += `
+                    <div style="background-color: white; padding: 15px; border-radius: 8px; border-left: 4px solid #ff9800;">
+                        <h5 style="margin-top: 0; color: #333; font-size: 15px;">감정 키워드 분석</h5>
+                        <div style="display: flex; gap: 20px;">
+                            <div>
+                                <strong>${document.getElementById('personaA').value}:</strong><br>
+                                긍정: ${diffHighlights.emotion_a?.positive || 0} | 
+                                부정: ${diffHighlights.emotion_a?.negative || 0} | 
+                                중립: ${diffHighlights.emotion_a?.neutral || 0}
+                            </div>
+                            <div>
+                                <strong>${document.getElementById('personaB').value}:</strong><br>
+                                긍정: ${diffHighlights.emotion_b?.positive || 0} | 
+                                부정: ${diffHighlights.emotion_b?.negative || 0} | 
+                                중립: ${diffHighlights.emotion_b?.neutral || 0}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // 뒤로가기
+        function goBack() {
+            window.location.href = '/';
+        }
+
+        // 구조화된 분석 생성
+        async function generateStructuredAnalysis() {
+            if (!currentExperiment || currentQuestion === null) {
+                alert('실험과 질문을 먼저 선택해주세요.');
+                return;
+            }
+            
+            const includeEmbeddings = document.getElementById('includeEmbeddings').checked;
+            const includeSimilarities = document.getElementById('includeSimilarities').checked;
+            const analysisDepth = document.getElementById('analysisDepth').value;
+            
+            // 선택된 질문의 텍스트 가져오기
+            const selectedQuestionText = getSelectedQuestionText();
+            
+            try {
+                const response = await fetch('/visualization/structured-analysis', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        experiment_data: currentExperiment,
+                        question_index: parseInt(currentQuestion),
+                        question_text: selectedQuestionText, // 선택된 질문 텍스트 전달
+                        include_embeddings: includeEmbeddings,
+                        include_similarities: includeSimilarities,
+                        analysis_depth: analysisDepth
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        // 캐시에서 로드되었는지 확인 (콘솔에만 로그, 사용자에게는 알림하지 않음)
+                        if (result.loaded_from_cache) {
+                            console.log('✅ 기존 구조화된 분석 결과를 캐시에서 로드했습니다');
+                        } else {
+                            console.log('🔄 새로운 구조화된 분석을 생성했습니다');
+                        }
+                        
+                        displayStructuredAnalysis(result.data);
+                        // 전역 변수에 저장 (다운로드용)
+                        window.currentStructuredAnalysis = result.data;
+                        
+                        // 구조화된 분석 로딩 완료
+                        hideSpecificLoading('structuredAnalysis');
+                    } else {
+                        throw new Error(result.message || '구조화된 분석 생성 실패');
+                    }
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'API 호출 실패');
+                }
+            } catch (error) {
+                console.error('구조화된 분석 생성 실패:', error);
+                
+                // 구조화된 분석 로딩 완료 (오류 발생 시에도)
+                hideSpecificLoading('structuredAnalysis');
+                
+                // 더 자세한 오류 메시지 표시
+                let errorMessage = '구조화된 분석 생성에 실패했습니다: ' + error.message;
+                if (error.message.includes('answers 배열이 비어있습니다')) {
+                    errorMessage = '구조화된 분석 생성에 실패했습니다: 선택한 실험의 응답 데이터가 비어있습니다. 다른 실험을 선택하거나 응답 데이터가 있는 실험을 사용해주세요.';
+                }
+                alert(errorMessage);
+            }
+        }
+
+        // 구조화된 분석 결과 표시
+        function displayStructuredAnalysis(data) {
+            // 질문 정보 표시 (questionDetails div가 제거되어 비활성화)
+            // displayQuestionInfo(data);
+            
+            // 페르소나별 응답 분석 표시
+            displayPersonaResponses(data.persona_responses);
+            
+            // 유사도 매트릭스 표시
+            if (data.similarities && data.similarities.length > 0) {
+                displaySimilarityMatrix(data.similarities, data.persona_responses);
+            }
+            
+            // 전체 통계 표시
+            displayOverallStatistics(data.overall_statistics);
+            
+            // 모델 정보 표시
+            displayModelInfo(data.model_info);
+            
+            // 결과 표시
+            document.getElementById('structuredAnalysisContent').style.display = 'block';
+        }
+
+        // 질문 정보 표시
+        function displayQuestionInfo(data) {
+            // questionDetails div가 제거되었으므로 이 함수는 비활성화
+            console.log('🔍 displayQuestionInfo 호출됨 - questionDetails div가 제거되어 표시하지 않음');
+            return;
+            
+            const container = document.getElementById('questionDetails');
+            
+            // 질문 텍스트가 기본값인지 확인
+            const isDefaultQuestion = data.question_text.startsWith('질문 ') && data.question_text.includes('질문');
+            
+            let html = `
+                
+                <div style="background-color: white; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #1976d2;">
+                    <strong>질문 내용:</strong><br>
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 10px; font-size: 16px; line-height: 1.5;">
+                        ${isDefaultQuestion ? 
+                            `<span style="color: #dc3545; font-style: italic;">⚠️ 실제 질문 내용을 찾을 수 없습니다. 기본값: ${data.question_text}</span>` : 
+                            data.question_text
+                        }
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        // 페르소나별 응답 분석 표시
+        function displayPersonaResponses(personaResponses) {
+            const container = document.getElementById('personaResponsesContent');
+            let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">';
+            
+            personaResponses.forEach((pr, index) => {
+                const color = getColorForIndex(index);
+                html += `
+                    <div style="background-color: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${color}; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <h5 style="margin-top: 0; color: #333; border-bottom: 2px solid ${color}; padding-bottom: 10px; cursor: pointer;" 
+                             onclick="goToPersonaDetail('${pr.persona}')" 
+                             class="clickable-persona">
+                            👤 ${pr.persona}
+                        </h5>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <strong>응답 텍스트:</strong><br>
+                            <div style="background-color: #f8f9fa; padding: 10px; border-radius: 4px; margin-top: 5px; line-height: 1.6;">
+                                <div id="highlightedText_${index}"></div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <strong>의미 태그:</strong><br>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
+                                <span style="background-color: #e3f2fd; padding: 4px 8px; border-radius: 12px; font-size: 17px;">
+                                    감정: ${pr.tags.감정_방향} (${pr.tags.감정_강도})
+                                </span>
+                                <span style="background-color: #e8f5e8; padding: 4px 8px; border-radius: 12px; font-size: 17px;">
+                                    행동: ${pr.tags.행동_성향}
+                                </span>
+                                <span style="background-color: #fff3e0; padding: 4px 8px; border-radius: 12px; font-size: 17px;">
+                                    관계: ${pr.tags.관계_지향성}
+                                </span>
+                                <span style="background-color: #fce4ec; padding: 4px 8px; border-radius: 12px; font-size: 17px;">
+                                    표현: ${pr.tags.표현_스타일}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- 의미 축 점수는 제거됨 -->
+                        
+                        <!-- 메타데이터는 제거됨 -->
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+            
+            // 각 응답 텍스트에 뉘앙스 기반 하이라이트 적용
+            personaResponses.forEach((pr, index) => {
+                const highlightedContainer = document.getElementById(`highlightedText_${index}`);
+                if (highlightedContainer) {
+                    // 뉘앙스 기반 하이라이트 적용
+                    const highlightedText = highlightTagsInText(pr.text, pr.tags);
+                    highlightedContainer.innerHTML = highlightedText;
+                }
+            });
+        }
+
+        // 유사도 매트릭스 표시
+        function displaySimilarityMatrix(similarities, personaResponses) {
+            const container = document.getElementById('similarityMatrixContent');
+            const personas = personaResponses.map(pr => pr.persona);
+            
+            let html = '<div style="overflow-x: auto;">';
+            html += '<table style="width: 100%; border-collapse: collapse; margin-top: 15px;">';
+            
+            // 헤더
+            html += '<thead><tr><th style="border: 1px solid #ddd; padding: 12px; background-color: #f8f9fa; text-align: center;">페르소나</th>';
+            personas.forEach(persona => {
+                html += `<th style="border: 1px solid #ddd; padding: 12px; background-color: #f8f9fa; text-align: center;">${persona}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            
+            // 데이터 행
+            personas.forEach((personaA, i) => {
+                html += `<tr><td style="border: 1px solid #ddd; padding: 12px; background-color: #f8f9fa; font-weight: bold;">${personaA}</td>`;
+                
+                personas.forEach((personaB, j) => {
+                    if (i === j) {
+                        html += '<td style="border: 1px solid #ddd; padding: 12px; text-align: center; background-color: #e9ecef;">-</td>';
+                    } else {
+                        const similarity = similarities.find(s => 
+                            (s.persona_a === personaA && s.persona_b === personaB) ||
+                            (s.persona_a === personaB && s.persona_b === personaA)
+                        );
+                        
+                        if (similarity) {
+                            const score = similarity.score;
+                            const color = score > 0.7 ? '#d4edda' : score > 0.4 ? '#fff3cd' : '#f8d7da';
+                            const textColor = score > 0.7 ? '#155724' : score > 0.4 ? '#856404' : '#721c24';
+                            
+                            html += `<td style="border: 1px solid #ddd; padding: 12px; text-align: center; background-color: ${color}; color: ${textColor}; font-weight: bold;">
+                                ${(score * 100).toFixed(1)}%
+                            </td>`;
+                        } else {
+                            html += '<td style="border: 1px solid #ddd; padding: 12px; text-align: center;">N/A</td>';
+                        }
+                    }
+                });
+                
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        // 전체 통계 표시
+        function displayOverallStatistics(statistics) {
+            const container = document.getElementById('overallStatisticsContent');
+            let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">';
+            
+            // 기본 통계 (메타데이터 제거)
+            html += `
+                <div style="background-color: white; padding: 15px; border-radius: 8px; border-left: 4px solid #9c27b0;">
+                    <h5 style="margin-top: 0; color: #333;">📊 기본 통계</h5>
+                    <div>총 응답: <strong>${statistics.response_count}</strong>개</div>
+                </div>
+            `;
+            
+            // 감정 분포
+            if (statistics.emotion_distribution) {
+                const emotionDir = statistics.emotion_distribution.direction;
+                const emotionInt = statistics.emotion_distribution.intensity;
+                
+                html += `
+                    <div style="background-color: white; padding: 15px; border-radius: 8px; border-left: 4px solid #9c27b0;">
+                        <h5 style="margin-top: 0; color: #333;">😊 감정 분포</h5>
+                        <div><strong>방향:</strong></div>
+                        ${Object.entries(emotionDir).map(([dir, count]) => 
+                            `<div style="margin-left: 10px;">${dir}: ${count}개</div>`
+                        ).join('')}
+                        <div style="margin-top: 10px;"><strong>강도:</strong></div>
+                        ${Object.entries(emotionInt).map(([intensity, count]) => 
+                            `<div style="margin-left: 10px;">${intensity}: ${count}개</div>`
+                        ).join('')}
+                    </div>
+                `;
+            }
+            
+            // 의미 축 평균
+            if (statistics.dimension_averages) {
+                html += `
+                    <div style="background-color: white; padding: 15px; border-radius: 8px; border-left: 4px solid #9c27b0;">
+                        <h5 style="margin-top: 0; color: #333;">📈 의미 축 평균</h5>
+                        ${Object.entries(statistics.dimension_averages).map(([dim, avg]) => 
+                            `<div>${getDimensionDisplayName(dim)}: <strong>${avg}</strong></div>`
+                        ).join('')}
+                    </div>
+                `;
+            }
+            
+            // 유사도 통계
+            if (statistics.similarity_statistics && Object.keys(statistics.similarity_statistics).length > 0) {
+                const simStats = statistics.similarity_statistics;
+                html += `
+                    <div style="background-color: white; padding: 15px; border-radius: 8px; border-left: 4px solid #9c27b0;">
+                        <h5 style="margin-top: 0; color: #333;">🔗 유사도 통계</h5>
+                        <div>최소: <strong>${(simStats.min_similarity * 100).toFixed(1)}%</strong></div>
+                        <div>최대: <strong>${(simStats.max_similarity * 100).toFixed(1)}%</strong></div>
+                        <div>평균: <strong>${(simStats.avg_similarity * 100).toFixed(1)}%</strong></div>
+                        <div>총 비교: <strong>${simStats.total_comparisons}</strong>개</div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // 모델 정보 표시
+        function displayModelInfo(modelInfo) {
+            const container = document.getElementById('modelInfoContent');
+            let html = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div style="background-color: white; padding: 15px; border-radius: 8px; border-left: 4px solid #2e7d32;">
+                        <strong>LLM 모델:</strong><br>${modelInfo.llm_model}
+                    </div>
+                    <div style="background-color: white; padding: 15px; border-radius: 8px; border-left: 4px solid #2e7d32;">
+                        <strong>임베딩 모델:</strong><br>${modelInfo.embedding_model}
+                    </div>
+                    <div style="background-color: white; padding: 15px; border-radius: 8px; border-left: 4px solid #2e7d32;">
+                        <strong>분석 버전:</strong><br>${modelInfo.analysis_version}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        // 구조화된 분석 결과 JSON 다운로드
+        function downloadStructuredAnalysis() {
+            if (!window.currentStructuredAnalysis) {
+                alert('먼저 구조화된 분석을 생성해주세요.');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(window.currentStructuredAnalysis, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `structured_analysis_${window.currentStructuredAnalysis.question_id}_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // 알림 표시 함수
+        function showNotification(message, type = 'info') {
+            // 기존 알림 제거
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            // 알림 요소 생성
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
+                z-index: 10000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                max-width: 300px;
+                word-wrap: break-word;
+            `;
+            
+            // 타입별 스타일 설정
+            if (type === 'success') {
+                notification.style.backgroundColor = '#28a745';
+            } else if (type === 'info') {
+                notification.style.backgroundColor = '#17a2b8';
+            } else if (type === 'warning') {
+                notification.style.backgroundColor = '#ffc107';
+                notification.style.color = '#212529';
+            } else if (type === 'error') {
+                notification.style.backgroundColor = '#dc3545';
+            }
+            
+            notification.textContent = message;
+            
+            // 페이지에 추가
+            document.body.appendChild(notification);
+            
+            // 3초 후 자동 제거
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+

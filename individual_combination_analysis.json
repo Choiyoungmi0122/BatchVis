@@ -1,0 +1,343 @@
+{
+  "top_15_differentiated": [
+    {
+      "combination": "상_상_상_상|중_중_하",
+      "differentiation_score": 27.964189673052964,
+      "avg_distance": 2.9104741826324054,
+      "answer_variety": 1,
+      "emotional_variety": 3,
+      "length_variety": 254,
+      "extremity_score": 5,
+      "count": 21,
+      "personalities": [
+        "민감한, 모방하는"
+      ],
+      "avg_vector": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        2.0,
+        2.0,
+        1.0
+      ]
+    },
+    {
+      "combination": "상_상_하_하|하_하_중",
+      "differentiation_score": 26.115532570897592,
+      "avg_distance": 2.288831427243979,
+      "answer_variety": 2,
+      "emotional_variety": 4,
+      "length_variety": 233,
+      "extremity_score": 6,
+      "count": 42,
+      "personalities": [
+        "폭발적인, 미성숙한",
+        "폭발적인, 침울한"
+      ],
+      "avg_vector": [
+        3.0,
+        3.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        2.0
+      ]
+    },
+    {
+      "combination": "중_중_중_중|하_하_중",
+      "differentiation_score": 22.195938548745257,
+      "avg_distance": 2.2398463718631403,
+      "answer_variety": 2,
+      "emotional_variety": 4,
+      "length_variety": 200,
+      "extremity_score": 2,
+      "count": 42,
+      "personalities": [
+        "유연한, 미성숙한",
+        "유연한, 침울한"
+      ],
+      "avg_vector": [
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        1.0,
+        1.0,
+        2.0
+      ]
+    },
+    {
+      "combination": "중_상_하_하|하_상_상",
+      "differentiation_score": 20.898485856812457,
+      "avg_distance": 2.6212146420311417,
+      "answer_variety": 2,
+      "emotional_variety": 5,
+      "length_variety": 178,
+      "extremity_score": 6,
+      "count": 42,
+      "personalities": [
+        "고립되고 겁이 많은, 감정적인",
+        "고립되고 겁이 많은, 의존적인"
+      ],
+      "avg_vector": [
+        2.0,
+        3.0,
+        1.0,
+        1.0,
+        1.0,
+        3.0,
+        3.0
+      ]
+    },
+    {
+      "combination": "중_상_하_하|중_중_하",
+      "differentiation_score": 19.602760714373147,
+      "avg_distance": 2.506901785932871,
+      "answer_variety": 1,
+      "emotional_variety": 4,
+      "length_variety": 172,
+      "extremity_score": 4,
+      "count": 21,
+      "personalities": [
+        "고립되고 겁이 많은, 모방하는"
+      ],
+      "avg_vector": [
+        2.0,
+        3.0,
+        1.0,
+        1.0,
+        2.0,
+        2.0,
+        1.0
+      ]
+    },
+    {
+      "combination": "상_상_하_하|하_하_하",
+      "differentiation_score": 19.197373476356997,
+      "avg_distance": 2.493433690892489,
+      "answer_variety": 1,
+      "emotional_variety": 5,
+      "length_variety": 162,
+      "extremity_score": 7,
+      "count": 21,
+      "personalities": [
+        "폭발적인, 비논리적인"
+      ],
+      "avg_vector": [
+        3.0,
+        3.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "combination": "상_상_하_하|하_상_상",
+      "differentiation_score": 18.553741203798676,
+      "avg_distance": 2.634353009496688,
+      "answer_variety": 2,
+      "emotional_variety": 5,
+      "length_variety": 153,
+      "extremity_score": 7,
+      "count": 42,
+      "personalities": [
+        "폭발적인, 의존적인",
+        "폭발적인, 감정적인"
+      ],
+      "avg_vector": [
+        3.0,
+        3.0,
+        1.0,
+        1.0,
+        1.0,
+        3.0,
+        3.0
+      ]
+    },
+    {
+      "combination": "중_상_하_하|하_하_하",
+      "differentiation_score": 18.39162903486014,
+      "avg_distance": 2.4790725871503576,
+      "answer_variety": 1,
+      "emotional_variety": 4,
+      "length_variety": 157,
+      "extremity_score": 6,
+      "count": 21,
+      "personalities": [
+        "고립되고 겁이 많은, 비논리적인"
+      ],
+      "avg_vector": [
+        2.0,
+        3.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "combination": "상_상_상_상|하_상_상",
+      "differentiation_score": 17.906089946416255,
+      "avg_distance": 3.015224866040632,
+      "answer_variety": 2,
+      "emotional_variety": 5,
+      "length_variety": 145,
+      "extremity_score": 7,
+      "count": 42,
+      "personalities": [
+        "민감한, 의존적인",
+        "민감한, 감정적인"
+      ],
+      "avg_vector": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        1.0,
+        3.0,
+        3.0
+      ]
+    },
+    {
+      "combination": "상_상_하_하|하_하_상",
+      "differentiation_score": 17.70567282079867,
+      "avg_distance": 2.5141820519966784,
+      "answer_variety": 1,
+      "emotional_variety": 3,
+      "length_variety": 150,
+      "extremity_score": 7,
+      "count": 21,
+      "personalities": [
+        "폭발적인, 비조직화된"
+      ],
+      "avg_vector": [
+        3.0,
+        3.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        3.0
+      ]
+    },
+    {
+      "combination": "중_상_하_하|하_하_상",
+      "differentiation_score": 17.700124344174355,
+      "avg_distance": 2.500310860435886,
+      "answer_variety": 1,
+      "emotional_variety": 6,
+      "length_variety": 147,
+      "extremity_score": 6,
+      "count": 21,
+      "personalities": [
+        "고립되고 겁이 많은, 비조직화된"
+      ],
+      "avg_vector": [
+        2.0,
+        3.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        3.0
+      ]
+    },
+    {
+      "combination": "중_중_중_중|하_상_상",
+      "differentiation_score": 17.533366741458583,
+      "avg_distance": 2.5834168536464546,
+      "answer_variety": 2,
+      "emotional_variety": 5,
+      "length_variety": 149,
+      "extremity_score": 3,
+      "count": 42,
+      "personalities": [
+        "유연한, 의존적인",
+        "유연한, 감정적인"
+      ],
+      "avg_vector": [
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        1.0,
+        3.0,
+        3.0
+      ]
+    },
+    {
+      "combination": "중_상_하_하|하_상_중",
+      "differentiation_score": 17.373092856056257,
+      "avg_distance": 2.4327321401406405,
+      "answer_variety": 1,
+      "emotional_variety": 5,
+      "length_variety": 147,
+      "extremity_score": 5,
+      "count": 21,
+      "personalities": [
+        "고립되고 겁이 많은, 복종적인"
+      ],
+      "avg_vector": [
+        2.0,
+        3.0,
+        1.0,
+        1.0,
+        1.0,
+        3.0,
+        2.0
+      ]
+    },
+    {
+      "combination": "상_상_상_상|하_하_중",
+      "differentiation_score": 17.032869627465995,
+      "avg_distance": 2.707174068664991,
+      "answer_variety": 2,
+      "emotional_variety": 5,
+      "length_variety": 139,
+      "extremity_score": 6,
+      "count": 42,
+      "personalities": [
+        "민감한, 미성숙한",
+        "민감한, 침울한"
+      ],
+      "avg_vector": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        1.0,
+        1.0,
+        2.0
+      ]
+    },
+    {
+      "combination": "상_상_상_상|하_상_중",
+      "differentiation_score": 16.738259731849816,
+      "avg_distance": 2.845649329624537,
+      "answer_variety": 1,
+      "emotional_variety": 4,
+      "length_variety": 139,
+      "extremity_score": 6,
+      "count": 21,
+      "personalities": [
+        "민감한, 복종적인"
+      ],
+      "avg_vector": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        1.0,
+        3.0,
+        2.0
+      ]
+    }
+  ],
+  "total_combinations": 24,
+  "total_answers": 672
+}

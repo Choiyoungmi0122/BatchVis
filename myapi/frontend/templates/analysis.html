@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>페르소나 응답 유사도 분석</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #F0F7FB;
+      font-family: 'Roboto', sans-serif;
+    }
+
+    .container {
+      width: 96%;
+      padding: 32px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #8E12D5;
+    }
+
+    .back-btn {
+      background: #6c757d;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .back-btn:hover {
+      background: #5a6268;
+    }
+
+    .page-header h1 {
+      margin: 0;
+      color: #3D2D4C;
+      font-size: 32px;
+      font-weight: 700;
+    }
+
+    .analysis-controls {
+      background: white;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 25px;
+    }
+
+    .control-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      align-items: end;
+    }
+
+    .control-group {
+      flex: 1;
+    }
+
+    .control-group label {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .control-group select {
+      width: 100%;
+      height: 40px;
+      font-size: 16px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+
+    .analysis-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.2s ease;
+    }
+    
+    .analysis-btn:hover {
+      background: #0056b3;
+    }
+    
+    .analysis-btn:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+    }
+
+    .file-selection {
+      margin-top: 20px;
+    }
+
+    .file-selection label {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .file-selection .file-list {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 15px;
+      background: #fafafa;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+      transition: background-color 0.2s ease;
+    }
+
+    .file-item:hover {
+      background-color: #f8f9fa;
+    }
+
+    .file-item:last-child {
+      border-bottom: none;
+    }
+
+    .file-item input[type="checkbox"] {
+      margin-right: 12px;
+      transform: scale(1.1);
+    }
+
+    .file-item label {
+      flex: 1;
+      cursor: pointer;
+      padding: 4px 0;
+      margin: 0;
+    }
+
+    .estimated-time {
+      margin-top: 15px;
+      padding: 12px;
+      background: #e8f4fd;
+      border: 1px solid #bee5eb;
+      border-radius: 6px;
+      text-align: center;
+      display: none;
+    }
+
+    .estimated-time .time-display {
+      color: #8E12D5;
+      font-weight: 600;
+      font-size: 18px;
+    }
+
+    .analysis-results {
+      background: white;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: none;
+    }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #eee;
+    }
+
+    .results-header h3 {
+      margin: 0;
+      color: #333;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .action-btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: background-color 0.2s ease;
+    }
+
+    .action-btn:hover {
+      background: #218838;
+    }
+
+    .analysis-content {
+      margin-top: 20px;
+    }
+
+    .stats-section {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+
+    .stats-section h4 {
+      margin: 0 0 15px 0;
+      color: #333;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .stat-item {
+      background: white;
+      padding: 15px;
+      border-radius: 5px;
+      border-left: 4px solid #007bff;
+    }
+
+    .stat-item h5 {
+      margin: 0 0 10px 0;
+      color: #333;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #007bff;
+    }
+
+    .success-message {
+      color: #155724;
+      background: #d4edda;
+      padding: 15px;
+      border-radius: 5px;
+      border: 1px solid #c3e6cb;
+      margin: 15px 0;
+    }
+
+    .error-message {
+      color: #dc3545;
+      background: #f8d7da;
+      padding: 15px;
+      border-radius: 5px;
+      border: 1px solid #f5c6cb;
+      margin: 15px 0;
+    }
+
+    .loading {
+      color: #666;
+      font-style: italic;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .visualization-container {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .visualization-container img {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .no-files-message {
+      color: #666;
+      text-align: center;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border: 1px dashed #ccc;
+    }
+
+    .no-files-message .icon {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .no-files-message .title {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .no-files-message .subtitle {
+      font-size: 14px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <a href="/" class="back-btn">← 메인으로 돌아가기</a>
+      <h1>🔍 페르소나 응답 유사도 분석</h1>
+    </div>
+    
+    <div class="analysis-controls">
+      <div class="control-row">
+        <div class="control-group">
+          <label for="analysisType">🔍 분석 유형:</label>
+          <select id="analysisType" onchange="updateEstimatedTime()">
+            <option value="all">📊 전체 분석 (권장)</option>
+            <option value="similarity_matrix">📈 유사도 행렬만</option>
+            <option value="clustering">🔍 클러스터링</option>
+            <option value="dimensionality_reduction">📉 차원 축소</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <button id="startAnalysisBtn" class="analysis-btn" onclick="startSimilarityAnalysis()">🚀 분석 시작</button>
+        </div>
+      </div>
+      
+      <div class="file-selection">
+        <label>📁 분석할 실험 파일 선택:</label>
+        <div id="experimentFileList" class="file-list">
+          <div class="no-files-message">
+            <div class="icon">📁</div>
+            <div class="title">분석할 실험 파일이 없습니다</div>
+            <div class="subtitle">먼저 실험을 실행하여 데이터를 생성해주세요.</div>
+          </div>
+        </div>
+        <div id="estimatedTimeInfo" class="estimated-time">
+          <div style="font-size: 14px; color: #0c5460;">
+            <span style="font-weight: 600;">⏱️ 예상 분석 시간:</span>
+            <span id="estimatedTimeDisplay" class="time-display"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="analysisResults" class="analysis-results">
+      <div class="results-header">
+        <h3>분석 결과</h3>
+        <div class="result-actions">
+          <button id="showStatsBtn" class="action-btn" onclick="showDetailedStats()">통계 보기</button>
+          <button id="showVisualizationBtn" class="action-btn" onclick="showVisualizations()">시각화</button>
+          <button id="exportResultsBtn" class="action-btn" onclick="exportAnalysisResults()">결과 내보내기</button>
+        </div>
+      </div>
+      
+      <div id="analysisContent">
+        <div class="loading">분석 중...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 유사도 분석 결과 저장
+    let currentAnalysisResult = null;
+
+    // 페이지 로드 시 실험 파일 목록 로드
+    window.addEventListener('DOMContentLoaded', () => {
+      loadExperimentFiles();
+    });
+
+    // 실험 파일 목록 로드
+    async function loadExperimentFiles() {
+      try {
+        const res = await fetch('/list_experiments');
+        if (res.ok) {
+          const experiments = await res.json();
+          const fileList = document.getElementById('experimentFileList');
+          
+          if (experiments.length === 0) {
+            fileList.innerHTML = `
+              <div class="no-files-message">
+                <div class="icon">📁</div>
+                <div class="title">분석할 실험 파일이 없습니다</div>
+                <div class="subtitle">먼저 실험을 실행하여 데이터를 생성해주세요.</div>
+              </div>
+            `;
+            return;
+          }
+          
+          let fileListHTML = '';
+          experiments.forEach(exp => {
+            const isChecked = experiments.length === 1 ? 'checked' : ''; // 파일이 하나면 자동 선택
+            fileListHTML += `
+              <div class="file-item">
+                <input type="checkbox" id="file_${exp.filename}" value="${exp.filename}" ${isChecked} onchange="updateEstimatedTime()">
+                <label for="file_${exp.filename}">
+                  <strong>${exp.name}</strong><br>
+                  <small style="color: #666;">${exp.date} | ${exp.age}세 | ${exp.symptom}</small>
+                </label>
+              </div>
+            `;
+          });
+          fileList.innerHTML = fileListHTML;
+          
+          // 초기 예상 시간 표시
+          updateEstimatedTime();
+        }
+      } catch (error) {
+        console.error('실험 파일 목록 로드 실패:', error);
+        document.getElementById('experimentFileList').innerHTML = '<div class="error-message">파일 목록 로드 실패</div>';
+      }
+    }
+
+    // 선택된 실험 파일 가져오기
+    function getSelectedExperimentFiles() {
+      const checkboxes = document.querySelectorAll('#experimentFileList input[type="checkbox"]:checked');
+      return Array.from(checkboxes).map(cb => cb.value);
+    }
+
+    // 예상 시간 계산
+    function calculateEstimatedTime(fileCount, analysisType) {
+      // 파일당 평균 응답 수 (실험 데이터 기반 추정)
+      const avgResponsesPerFile = 15; // 페르소나 조합당 3개 응답 × 5개 조합
+      const totalResponses = fileCount * avgResponsesPerFile;
+      
+      // 분석 유형별 시간 계산 (초 단위)
+      let baseTime = 0;
+      
+      // 기본 임베딩 생성 시간 (응답 수에 비례)
+      baseTime += totalResponses * 0.5; // 응답당 약 0.5초
+      
+      // 분석 유형별 추가 시간
+      switch(analysisType) {
+        case 'similarity_matrix':
+          baseTime += totalResponses * 0.1; // 유사도 행렬만
+          break;
+        case 'clustering':
+          baseTime += totalResponses * 0.3; // 클러스터링 추가
+          break;
+        case 'dimensionality_reduction':
+          baseTime += totalResponses * 0.4; // 차원 축소 추가
+          break;
+        case 'all':
+        default:
+          baseTime += totalResponses * 0.6; // 전체 분석
+          break;
+      }
+      
+      // 최소 시간 보장
+      baseTime = Math.max(baseTime, 10);
+      
+      // 시간 포맷팅
+      if (baseTime < 60) {
+        return `${Math.ceil(baseTime)}초`;
+      } else if (baseTime < 3600) {
+        return `${Math.ceil(baseTime / 60)}분`;
+      } else {
+        return `${Math.ceil(baseTime / 3600)}시간`;
+      }
+    }
+
+    // 예상 시간 업데이트
+    function updateEstimatedTime() {
+      const selectedFiles = getSelectedExperimentFiles();
+      const analysisType = document.getElementById('analysisType').value;
+      const timeInfo = document.getElementById('estimatedTimeInfo');
+      const timeDisplay = document.getElementById('estimatedTimeDisplay');
+      
+      if (selectedFiles.length === 0) {
+        timeInfo.style.display = 'none';
+        return;
+      }
+      
+      const estimatedTime = calculateEstimatedTime(selectedFiles.length, analysisType);
+      timeDisplay.textContent = estimatedTime;
+      timeInfo.style.display = 'block';
+    }
+
+    // 유사도 분석 시작
+    async function startSimilarityAnalysis() {
+      const selectedFiles = getSelectedExperimentFiles();
+      if (selectedFiles.length === 0) {
+        alert('분석할 실험 파일을 선택해주세요.');
+        return;
+      }
+
+      const analysisType = document.getElementById('analysisType').value;
+      const startBtn = document.getElementById('startAnalysisBtn');
+      const resultsDiv = document.getElementById('analysisResults');
+      const contentDiv = document.getElementById('analysisContent');
+
+      // 분석 시간 예상치 계산
+      const estimatedTime = calculateEstimatedTime(selectedFiles.length, analysisType);
+
+      // 버튼 비활성화 및 로딩 표시
+      startBtn.disabled = true;
+      startBtn.textContent = '분석 중...';
+      
+      // 결과 영역 표시 및 로딩 메시지
+      resultsDiv.style.display = 'block';
+      contentDiv.innerHTML = `
+        <div class="loading">
+          <div style="font-size: 20px; margin-bottom: 15px; color: #8E12D5; font-weight: 600;">페르소나 응답 유사도 분석 중...</div>
+          <div style="font-size: 16px; margin-bottom: 8px;">📊 선택된 파일: <strong>${selectedFiles.length}</strong>개</div>
+          <div style="font-size: 14px; color: #999; margin-bottom: 20px;">분석 유형: <strong>${analysisType === 'all' ? '전체 분석' : analysisType}</strong></div>
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; border-left: 4px solid #8E12D5; text-align: left; max-width: 400px; margin: 0 auto;">
+            <div style="font-weight: 600; margin-bottom: 8px;">분석 중인 파일:</div>
+            ${selectedFiles.map(file => `<div style="margin-bottom: 4px; font-size: 13px;">• ${file}</div>`).join('')}
+          </div>
+          <div style="margin-top: 15px; padding: 12px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; color: #856404;">
+            <div style="font-weight: 600; margin-bottom: 5px;">⏱️ 예상 분석 시간:</div>
+            <div style="font-size: 16px; color: #8E12D5; font-weight: 600;">${estimatedTime}</div>
+            <div style="font-size: 12px; margin-top: 5px; color: #856404;">
+              * 응답 수와 분석 유형에 따라 달라질 수 있습니다<br>
+              * 임베딩 생성: 가장 시간이 오래 걸리는 단계<br>
+              * 클러스터링/차원축소: 응답 수에 비례하여 시간 증가
+            </div>
+          </div>
+          <div style="margin-top: 20px; color: #8E12D5; font-size: 14px;">분석이 완료될 때까지 잠시 기다려주세요.</div>
+        </div>
+      `;
+
+      try {
+        const response = await fetch('/analysis/similarity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            experiment_files: selectedFiles,
+            analysis_type: analysisType
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          currentAnalysisResult = result; // 분석 결과 저장
+          displayAnalysisResults(result, selectedFiles);
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.error || '분석 실패');
+        }
+      } catch (error) {
+        contentDiv.innerHTML = `
+          <div class="error-message">
+            <strong>분석 오류:</strong> ${error.message}
+          </div>
+        `;
+      } finally {
+        // 버튼 상태 복원
+        startBtn.disabled = false;
+        startBtn.textContent = '🚀 분석 시작';
+      }
+    }
+
+    // 분석 결과 표시
+    function displayAnalysisResults(result, selectedFiles) {
+      const contentDiv = document.getElementById('analysisContent');
+      
+      let contentHTML = `
+        <div class="success-message">
+          <strong>🎉 분석 완료!</strong> ${selectedFiles.length}개 파일에서 총 ${result.total_responses}개 응답을 분석했습니다.
+        </div>
+        
+        <div class="stats-section">
+          <h4>📊 기본 통계</h4>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <h5>총 응답 수</h5>
+              <div class="stat-value">${result.total_responses}</div>
+            </div>
+            <div class="stat-item">
+              <h5>분석 파일 수</h5>
+              <div class="stat-value">${selectedFiles.length}</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      if (result.clustering) {
+        contentHTML += `
+          <div class="stats-section">
+            <h4>🔍 클러스터링 결과</h4>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <h5>K-means 클러스터</h5>
+                <div class="stat-value">${result.clustering.n_clusters_kmeans}</div>
+              </div>
+              <div class="stat-item">
+                <h5>DBSCAN 클러스터</h5>
+                <div class="stat-value">${result.clustering.n_clusters_dbscan}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      contentHTML += `
+        <div class="stats-section">
+          <h4>📁 분석된 파일 목록</h4>
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; border-left: 4px solid #28a745;">
+            ${selectedFiles.map(file => `<div style="margin-bottom: 5px; font-size: 14px;">✅ ${file}</div>`).join('')}
+          </div>
+        </div>
+      `;
+
+      contentDiv.innerHTML = contentHTML;
+    }
+
+    // 상세 통계 보기
+    async function showDetailedStats() {
+      if (!currentAnalysisResult) {
+        alert('먼저 유사도 분석을 실행해주세요.');
+        return;
+      }
+
+      const contentDiv = document.getElementById('analysisContent');
+      const similarityMatrix = currentAnalysisResult.similarity_matrix;
+      const responsesInfo = currentAnalysisResult.responses_info;
+      
+      let statsHTML = `
+        <div class="success-message">
+          <strong>📊 상세 통계 분석 결과</strong>
+        </div>
+        
+        <div class="stats-section">
+          <h4>🔍 유사도 통계</h4>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <h5>전체 응답 수</h5>
+              <div class="stat-value">${responsesInfo.length}</div>
+            </div>
+            <div class="stat-item">
+              <h5>유사도 행렬 크기</h5>
+              <div class="stat-value">${similarityMatrix.length} × ${similarityMatrix[0].length}</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // 유사도 값 통계 계산
+      const allSimilarities = [];
+      for (let i = 0; i < similarityMatrix.length; i++) {
+        for (let j = i + 1; j < similarityMatrix[i].length; j++) {
+          allSimilarities.push(similarityMatrix[i][j]);
+        }
+      }
+      
+      if (allSimilarities.length > 0) {
+        const avgSimilarity = allSimilarities.reduce((a, b) => a + b, 0) / allSimilarities.length;
+        const maxSimilarity = Math.max(...allSimilarities);
+        const minSimilarity = Math.min(...allSimilarities);
+        
+        statsHTML += `
+          <div class="stats-section">
+            <h4>📈 유사도 값 분포</h4>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <h5>평균 유사도</h5>
+                <div class="stat-value">${avgSimilarity.toFixed(3)}</div>
+              </div>
+              <div class="stat-item">
+                <h5>최대 유사도</h5>
+                <div class="stat-value">${maxSimilarity.toFixed(3)}</div>
+              </div>
+              <div class="stat-item">
+                <h5>최소 유사도</h5>
+                <div class="stat-value">${minSimilarity.toFixed(3)}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 클러스터링 결과가 있으면 표시
+      if (currentAnalysisResult.clustering) {
+        const clustering = currentAnalysisResult.clustering;
+        statsHTML += `
+          <div class="stats-section">
+            <h4>🔍 클러스터링 상세 결과</h4>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <h5>K-means 클러스터 수</h5>
+                <div class="stat-value">${clustering.n_clusters_kmeans}</div>
+              </div>
+              <div class="stat-item">
+                <h5>DBSCAN 클러스터 수</h5>
+                <div class="stat-value">${clustering.n_clusters_dbscan}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 응답별 상세 정보
+      statsHTML += `
+        <div class="stats-section">
+          <h4>📝 응답별 상세 정보</h4>
+          <div style="max-height: 300px; overflow-y: auto;">
+      `;
+      
+      responsesInfo.forEach((response, index) => {
+        statsHTML += `
+          <div style="background: white; padding: 15px; margin-bottom: 10px; border-radius: 6px; border-left: 4px solid #007bff;">
+            <div style="font-weight: 600; margin-bottom: 8px;">응답 #${index + 1}</div>
+            <div style="font-size: 13px; color: #666; margin-bottom: 5px;">
+              <strong>파일:</strong> ${response.filename} | 
+              <strong>성격:</strong> ${response.personality}
+            </div>
+            <div style="font-size: 13px; color: #666; margin-bottom: 5px;">
+              <strong>질문:</strong> ${response.question}
+            </div>
+            <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 14px;">
+              ${response.answer}
+            </div>
+          </div>
+        `;
+      });
+      
+      statsHTML += `
+          </div>
+        </div>
+      `;
+
+      contentDiv.innerHTML = statsHTML;
+    }
+
+    // 시각화 보기
+    async function showVisualizations() {
+      if (!currentAnalysisResult) {
+        alert('먼저 유사도 분석을 실행해주세요.');
+        return;
+      }
+
+      const contentDiv = document.getElementById('analysisContent');
+      
+      // 시각화 생성 중 로딩 표시
+      contentDiv.innerHTML = `
+        <div class="loading">
+          <div style="font-size: 18px; margin-bottom: 15px; color: #8E12D5;">🎨 시각화 생성 중...</div>
+          <div style="font-size: 14px; color: #999;">차트와 그래프를 생성하고 있습니다.</div>
+        </div>
+      `;
+
+      try {
+        const response = await fetch('/visualization/similarity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            analysis_result: currentAnalysisResult
+          })
+        });
+
+        if (response.ok) {
+          const vizResult = await response.json();
+          
+          let vizHTML = `
+            <div class="success-message">
+              <strong>🎨 시각화 생성 완료!</strong>
+            </div>
+          `;
+
+          // 시각화 이미지가 있으면 표시
+          if (vizResult.visualization) {
+            vizHTML += `
+              <div class="visualization-container">
+                <h4 style="margin-bottom: 15px;">📊 유사도 분석 시각화</h4>
+                <img src="data:image/png;base64,${vizResult.visualization}" alt="유사도 분석 시각화">
+              </div>
+            `;
+          } else {
+            // 시각화 실패 시 대체 정보 표시
+            vizHTML += `
+              <div style="background: #fff3cd; padding: 20px; border-radius: 6px; border: 1px solid #ffeaa7; color: #856404;">
+                <div style="font-size: 16px; margin-bottom: 10px; color: #8E12D5;">⚠️ 시각화 생성 실패</div>
+                <div style="font-size: 14px; margin-bottom: 15px;">
+                  시각화 이미지를 생성할 수 없었습니다.<br>
+                  <strong>원인:</strong> ${vizResult.error || '알 수 없는 오류'}
+                </div>
+            `;
+            
+            // 대체 데이터가 있으면 표시
+            if (vizResult.fallback_data && vizResult.fallback_data.similarity_stats) {
+              const stats = vizResult.fallback_data.similarity_stats;
+              vizHTML += `
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; border-left: 4px solid #8E12D5;">
+                  <div style="font-weight: 600; margin-bottom: 10px; color: #333;">📊 대체 통계 정보</div>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px;">
+                    <div style="text-align: center;">
+                      <div style="font-size: 12px; color: #666;">평균</div>
+                      <div style="font-size: 18px; font-weight: 600; color: #8E12D5;">${stats.mean.toFixed(3)}</div>
+                    </div>
+                    <div style="text-align: center;">
+                      <div style="font-size: 12px; color: #666;">표준편차</div>
+                      <div style="font-size: 18px; font-weight: 600; color: #8E12D5;">${stats.std.toFixed(3)}</div>
+                    </div>
+                    <div style="text-align: center;">
+                      <div style="font-size: 12px; color: #666;">최소값</div>
+                      <div style="font-size: 18px; font-weight: 600; color: #8E12D5;">${stats.min.toFixed(3)}</div>
+                    </div>
+                    <div style="text-align: center;">
+                      <div style="font-size: 12px; color: #666;">최대값</div>
+                      <div style="font-size: 18px; font-weight: 600; color: #8E12D5;">${stats.max.toFixed(3)}</div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }
+            
+            vizHTML += `
+                <div style="margin-top: 15px; font-size: 12px; color: #856404;">
+                  💡 <strong>해결 방법:</strong> 서버를 재시작하거나 matplotlib 라이브러리를 재설치해보세요.
+                </div>
+              </div>
+            `;
+          }
+
+          // 차원 축소 결과가 있으면 표시
+          if (currentAnalysisResult.dimensionality_reduction) {
+            const dr = currentAnalysisResult.dimensionality_reduction;
+            vizHTML += `
+              <div class="stats-section">
+                <h4>📉 차원 축소 결과</h4>
+                <div class="stats-grid">
+                  <div class="stat-item">
+                    <h5>PCA 설명 분산 비율</h5>
+                    <div class="stat-value">${(dr.explained_variance_ratio[0] * 100).toFixed(1)}%</div>
+                  </div>
+                  <div class="stat-item">
+                    <h5>t-SNE 차원</h5>
+                    <div class="stat-value">2D</div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+
+          contentDiv.innerHTML = vizHTML;
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.error || '시각화 생성 실패');
+        }
+      } catch (error) {
+        contentDiv.innerHTML = `
+          <div class="error-message">
+            <strong>시각화 오류:</strong> ${error.message}
+          </div>
+        `;
+      }
+    }
+
+    // 결과 내보내기
+    function exportAnalysisResults() {
+      if (!currentAnalysisResult) {
+        alert('먼저 유사도 분석을 실행해주세요.');
+        return;
+      }
+
+      try {
+        // JSON 파일로 내보내기
+        const dataStr = JSON.stringify(currentAnalysisResult, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `similarity_analysis_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+        link.click();
+        
+        // 성공 메시지 표시
+        const contentDiv = document.getElementById('analysisContent');
+        contentDiv.innerHTML = `
+          <div class="success-message">
+            <strong>💾 내보내기 완료!</strong><br>
+            파일명: ${link.download}
+          </div>
+        `;
+      } catch (error) {
+        alert(`내보내기 오류: ${error.message}`);
+      }
+    }
+  </script>
+</body>
+</html>

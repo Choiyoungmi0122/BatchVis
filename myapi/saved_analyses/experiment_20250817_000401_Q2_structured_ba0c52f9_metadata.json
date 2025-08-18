@@ -1,0 +1,14 @@
+{
+  "analysis_id": "experiment_20250817_000401_Q2_structured",
+  "experiment_name": "experiment_20250817_000401",
+  "question_index": 2,
+  "analysis_type": "structured",
+  "data_hash": "ba0c52f9",
+  "created_at": "2025-08-17T00:04:01.596308",
+  "summary": {
+    "has_radar": false,
+    "has_heatmap": false,
+    "has_sorting": false,
+    "has_structured": false
+  }
+}

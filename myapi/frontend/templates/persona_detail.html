@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>페르소나 상세 분석</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-button:hover {
+            background-color: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .responses-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: "📝";
+            margin-right: 15px;
+            font-size: 1.5rem;
+        }
+
+        .question-response {
+            margin-bottom: 30px;
+            padding: 25px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .question-response:hover {
+            transform: translateX(5px);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.1);
+        }
+
+        .question-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .question-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            flex: 1;
+        }
+
+        .response-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+            margin-left: 55px;
+            position: relative;
+        }
+
+        .response-content::before {
+            content: "💬";
+            position: absolute;
+            left: -15px;
+            top: 20px;
+            background: white;
+            padding: 5px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+        }
+
+        .response-text {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: #555;
+            font-style: italic;
+        }
+
+        .tags-section {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .question-response {
+                padding: 20px;
+            }
+            
+            .response-content {
+                margin-left: 35px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="goBack()">← 뒤로가기</button>
+    
+    <div class="container">
+        <div class="header">
+            <h1 id="personaName">페르소나 분석</h1>
+            <div class="subtitle" id="experimentName">실험 정보</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalQuestions">0</div>
+                <div class="stat-label">총 질문 수</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avgResponseLength">0</div>
+                <div class="stat-label">평균 응답 길이</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="dominantEmotion">-</div>
+                <div class="stat-label">주요 감정</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="responseStyle">-</div>
+                <div class="stat-label">응답 스타일</div>
+            </div>
+        </div>
+
+        <div class="responses-section">
+            <h2 class="section-title">질문별 응답 모음</h2>
+            <div id="responsesContainer">
+                <div class="loading">로딩 중...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // URL 파라미터에서 페르소나와 실험 정보 추출
+        const urlParams = new URLSearchParams(window.location.search);
+        const personaName = urlParams.get('persona');
+        const experimentName = urlParams.get('experiment');
+        const experimentFile = urlParams.get('file');
+
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            if (personaName && experimentFile) {
+                loadPersonaDetails();
+            } else {
+                showError('필수 정보가 누락되었습니다.');
+            }
+        });
+
+        // 페르소나 상세 정보 로드
+        async function loadPersonaDetails() {
+            try {
+                // 헤더 업데이트
+                document.getElementById('personaName').textContent = `${personaName} 분석`;
+                document.getElementById('experimentName').textContent = experimentName || experimentFile;
+
+                // 실험 데이터 로드
+                const response = await fetch(`/responses/${experimentFile}`);
+                if (!response.ok) {
+                    throw new Error('실험 데이터를 불러올 수 없습니다.');
+                }
+
+                const experimentData = await response.json();
+                const personaResponses = extractPersonaResponses(experimentData, personaName);
+                
+                if (personaResponses.length === 0) {
+                    showError(`${personaName}의 응답을 찾을 수 없습니다.`);
+                    return;
+                }
+
+                // 통계 계산 및 표시
+                displayStats(personaResponses);
+                
+                // 응답 목록 표시
+                displayResponses(personaResponses);
+
+            } catch (error) {
+                console.error('페르소나 상세 정보 로드 실패:', error);
+                showError('데이터를 불러오는 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 실험 데이터에서 특정 페르소나의 응답 추출
+        function extractPersonaResponses(experimentData, targetPersona) {
+            const responses = [];
+            
+            // 다양한 데이터 구조에서 응답 추출
+            let promptsData = [];
+            
+            // 방법 1: history[0].answers 구조
+            if (experimentData.history && experimentData.history[0] && experimentData.history[0].answers) {
+                promptsData = experimentData.history[0].answers;
+            }
+            // 방법 2: history[0].prompts 구조
+            else if (experimentData.history && experimentData.history[0] && experimentData.history[0].prompts) {
+                promptsData = experimentData.history[0].prompts;
+            }
+            // 방법 3: 직접 prompts 키
+            else if (experimentData.prompts) {
+                promptsData = experimentData.prompts;
+            }
+
+            // 질문 목록 가져오기
+            let questions = [];
+            if (experimentData.questions) {
+                questions = experimentData.questions;
+            } else if (experimentData.history && experimentData.history[0] && experimentData.history[0].questions) {
+                questions = experimentData.history[0].questions;
+            }
+
+            // 해당 페르소나의 응답만 필터링
+            promptsData.forEach((prompt, index) => {
+                if (prompt.personality === targetPersona) {
+                    let responseText = '';
+                    
+                    // 응답 텍스트 추출
+                    if (prompt.answer) {
+                        responseText = prompt.answer;
+                    } else if (prompt.response) {
+                        responseText = prompt.response;
+                    } else if (prompt.text) {
+                        responseText = prompt.text;
+                    } else if (prompt.qa && prompt.qa[index]) {
+                        responseText = prompt.qa[index].answer || '';
+                    }
+
+                    if (responseText) {
+                        responses.push({
+                            questionIndex: index,
+                            questionText: questions[index] || `질문 ${index + 1}`,
+                            responseText: responseText,
+                            tags: prompt.tags || {}
+                        });
+                    }
+                }
+            });
+
+            return responses;
+        }
+
+        // 통계 표시
+        function displayStats(responses) {
+            const totalQuestions = responses.length;
+            const avgLength = Math.round(
+                responses.reduce((sum, r) => sum + r.responseText.length, 0) / totalQuestions
+            );
+            
+            // 주요 감정 분석 (태그가 있는 경우)
+            const emotions = responses
+                .filter(r => r.tags && r.tags.감정_방향)
+                .map(r => r.tags.감정_방향);
+            const dominantEmotion = emotions.length > 0 ? 
+                getMostFrequent(emotions) : 'N/A';
+
+            // 응답 스타일 분석
+            const styles = responses
+                .filter(r => r.tags && r.tags.행동_성향)
+                .map(r => r.tags.행동_성향);
+            const responseStyle = styles.length > 0 ? 
+                getMostFrequent(styles) : 'N/A';
+
+            document.getElementById('totalQuestions').textContent = totalQuestions;
+            document.getElementById('avgResponseLength').textContent = avgLength;
+            document.getElementById('dominantEmotion').textContent = dominantEmotion;
+            document.getElementById('responseStyle').textContent = responseStyle;
+        }
+
+        // 가장 빈번한 값 찾기
+        function getMostFrequent(arr) {
+            const counts = {};
+            arr.forEach(item => {
+                counts[item] = (counts[item] || 0) + 1;
+            });
+            return Object.keys(counts).reduce((a, b) => 
+                counts[a] > counts[b] ? a : b
+            );
+        }
+
+        // 응답 목록 표시
+        function displayResponses(responses) {
+            const container = document.getElementById('responsesContainer');
+            
+            if (responses.length === 0) {
+                container.innerHTML = '<div class="error">응답 데이터가 없습니다.</div>';
+                return;
+            }
+
+            let html = '';
+            responses.forEach((response, index) => {
+                html += `
+                    <div class="question-response">
+                        <div class="question-header">
+                            <div class="question-number">${response.questionIndex + 1}</div>
+                            <div class="question-text">${response.questionText}</div>
+                        </div>
+                        <div class="response-content">
+                            <div class="response-text">"${response.responseText}"</div>
+                            ${response.tags && Object.keys(response.tags).length > 0 ? `
+                                <div class="tags-section">
+                                    ${Object.entries(response.tags).map(([key, value]) => 
+                                        `<span class="tag">${key}: ${value}</span>`
+                                    ).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // 뒤로가기
+        function goBack() {
+            window.history.back();
+        }
+
+        // 오류 표시
+        function showError(message) {
+            document.getElementById('responsesContainer').innerHTML = 
+                `<div class="error">${message}</div>`;
+        }
+    </script>
+</body>
+</html>

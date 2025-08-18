@@ -109,11 +109,11 @@ async def generate_virtual_patient(data: dict = Body(...)):
     """
     data = {
         "prompt": instruction 프롬프트,
-        "model": (optional, default: gpt-4-turbo-preview)
+        "model": (optional, default: gpt-4o)
     }
     """
     prompt = data.get("prompt")
-    model = data.get("model", "gpt-4-turbo-preview")
+    model = data.get("model", "gpt-4o")
     try:
         response = client.chat.completions.create(
             model=model,
@@ -135,13 +135,13 @@ async def ask_patient(data: dict = Body(...)):
     data = {
         "instruction": 챗봇 instruction (가상환자 역할),
         "question": 질문,
-        "model": (optional, default: gpt-4-turbo-preview)
+        "model": (optional, default: gpt-4o)
     }
     """
     context = data.get("context")
     instruction = data.get("instruction")
     question = data.get("question")
-    model = data.get("model", "gpt-4-turbo-preview")
+    model = data.get("model", "gpt-4o")
     prompt = f"{context}\nQ: {question}\nA:"
     try:
         response = client.chat.completions.create(
@@ -239,50 +239,20 @@ async def generate_instructions(data: dict = Body(...)):
     with open(personality_file, "r", encoding="utf-8") as f:
         personality_data = json.load(f)
     
-    # 2. Temperament+Character 조합만 virtual_patient_prompt 생성 (25개 조합으로 제한)
+    # 2. Temperament+Character 조합만 virtual_patient_prompt 생성
     instructions = []
-    
-    # 사용자가 선택한 25개 조합 정의
-    selected_combinations = [
-        {"temperament": "고립되고 겁이 많은", "character": "미성숙한"},
-        {"temperament": "폭발적인", "character": "비논리적인"},
-        {"temperament": "고립되고 겁이 많은", "character": "의존적인"},
-        {"temperament": "민감한", "character": "모방하는"},
-        {"temperament": "폭발적인", "character": "미성숙한"},
-        {"temperament": "유연한", "character": "감정적인"},
-        {"temperament": "민감한", "character": "비논리적인"},
-        {"temperament": "폭발적인", "character": "의존적인"},
-        {"temperament": "유연한", "character": "미성숙한"},
-        {"temperament": "고립되고 겁이 많은", "character": "비조직화된"},
-        {"temperament": "민감한", "character": "감정적인"},
-        {"temperament": "민감한", "character": "비조직화된"},
-        {"temperament": "폭발적인", "character": "감정적인"},
-        {"temperament": "고립되고 겁이 많은", "character": "모방하는"},
-        {"temperament": "유연한", "character": "비논리적인"},
-        {"temperament": "폭발적인", "character": "침울한"},
-        {"temperament": "유연한", "character": "비조직화된"},
-        {"temperament": "고립되고 겁이 많은", "character": "복종적인"},
-        {"temperament": "유연한", "character": "복종적인"},
-        {"temperament": "폭발적인", "character": "비조직화된"},
-        {"temperament": "민감한", "character": "침울한"},
-        {"temperament": "민감한", "character": "의존적인"},
-        {"temperament": "민감한", "character": "복종적인"},
-        {"temperament": "폭발적인", "character": "모방하는"},
-        {"temperament": "고립되고 겁이 많은", "character": "감정적인"}
-    ]
-    
-    for combo in selected_combinations:
-        # 선택된 조합에 맞는 temperament와 character 찾기
-        t1 = [t for t in personality_data if t["type"] == "temperament" and t["personality"] == combo["temperament"]][0]
-        t2 = [t for t in personality_data if t["type"] == "character" and t["personality"] == combo["character"]][0]
-        d1 = t1["detail"]
-        d2 = t2["detail"]
-        input_parts = user_input.split(',')
-        name = input_parts[0].strip() if len(input_parts) > 0 else ''
-        age = input_parts[1].replace('년생','').strip() if len(input_parts) > 1 else ''
-        gender = input_parts[2].strip() if len(input_parts) > 2 else ''
-        symptom = input_parts[3].strip() if len(input_parts) > 3 else ''
-        virtual_prompt = f"""당신은 다음 조건을 가진 가상환자입니다. 이 역할을 완전히 수행해주세요.
+    temperament = [t for t in personality_data if t["type"] == "temperament"]
+    character = [t for t in personality_data if t["type"] == "character"]
+    for t1 in temperament:
+        for t2 in character:
+            d1 = t1["detail"]
+            d2 = t2["detail"]
+            input_parts = user_input.split(',')
+            name = input_parts[0].strip() if len(input_parts) > 0 else ''
+            age = input_parts[1].replace('년생','').strip() if len(input_parts) > 1 else ''
+            gender = input_parts[2].strip() if len(input_parts) > 2 else ''
+            symptom = input_parts[3].strip() if len(input_parts) > 3 else ''
+            virtual_prompt = f"""당신은 다음 조건을 가진 가상환자입니다. 이 역할을 완전히 수행해주세요.
 
 환자 정보:
 - 이름: {name}
@@ -320,13 +290,13 @@ async def generate_instructions(data: dict = Body(...)):
 - "별다른 문제는 없지만, 우울한 기분이 자주 들어요."
 
 이제 당신은 위 환자입니다. 질문에 응답하세요."""
-        instructions.append({
-            "type": "personality+character",
-            "prompt": virtual_prompt,
-            "detail": {"temperament": d1, "character": d2},
-            "personality": f"{t1.get('personality','')}, {t2.get('personality','')}"
-        })
-    total_count = len(selected_combinations)
+            instructions.append({
+                "type": "personality+character",
+                "prompt": virtual_prompt,
+                "detail": {"temperament": d1, "character": d2},
+                "personality": f"{t1.get('personality','')}, {t2.get('personality','')}"
+            })
+    total_count = len(temperament) * len(character)
     return {
         "message": "Instruction 생성 완료",
         "instructions": instructions,
@@ -358,7 +328,7 @@ async def process_qa(data: dict = Body(...)):
         qa_prompt = f"{instruction['prompt']}\n\n질문: {q['text']}"
         try:
             response = client.chat.completions.create(
-                model="gpt-4-turbo-preview",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "당신은 가상환자 역할을 수행하는 AI입니다."},
                     {"role": "user", "content": qa_prompt}
@@ -444,7 +414,7 @@ async def process_qa_one_question(data: dict = Body(...)):
         ]
         try:
             response = client.chat.completions.create(
-                model="gpt-4-turbo-preview",
+                model="gpt-4o",
                 messages=messages,
                 max_tokens=500
             )
@@ -492,53 +462,20 @@ async def process_qa_batch(data: dict = Body(...)):
     with open(questions_file, "r", encoding="utf-8") as f:
         questions = json.load(f)
 
-    # 3. Temperament+Character 조합만 virtual_patient_prompt 생성 (25개 조합으로 제한)
+    # 3. Temperament+Character 조합만 virtual_patient_prompt 생성
     temperament = [t for t in personality_data if t["type"] == "temperament"]
     character = [t for t in personality_data if t["type"] == "character"]
-    
-    # 사용자가 선택한 25개 조합 정의
-    selected_combinations = [
-        {"temperament": "고립되고 겁이 많은", "character": "미성숙한"},
-        {"temperament": "폭발적인", "character": "비논리적인"},
-        {"temperament": "고립되고 겁이 많은", "character": "의존적인"},
-        {"temperament": "민감한", "character": "모방하는"},
-        {"temperament": "폭발적인", "character": "미성숙한"},
-        {"temperament": "유연한", "character": "감정적인"},
-        {"temperament": "민감한", "character": "비논리적인"},
-        {"temperament": "폭발적인", "character": "의존적인"},
-        {"temperament": "유연한", "character": "미성숙한"},
-        {"temperament": "고립되고 겁이 많은", "character": "비조직화된"},
-        {"temperament": "민감한", "character": "감정적인"},
-        {"temperament": "민감한", "character": "비조직화된"},
-        {"temperament": "폭발적인", "character": "감정적인"},
-        {"temperament": "고립되고 겁이 많은", "character": "모방하는"},
-        {"temperament": "유연한", "character": "비논리적인"},
-        {"temperament": "폭발적인", "character": "침울한"},
-        {"temperament": "유연한", "character": "비조직화된"},
-        {"temperament": "고립되고 겁이 많은", "character": "복종적인"},
-        {"temperament": "유연한", "character": "복종적인"},
-        {"temperament": "폭발적인", "character": "비조직화된"},
-        {"temperament": "민감한", "character": "침울한"},
-        {"temperament": "민감한", "character": "의존적인"},
-        {"temperament": "민감한", "character": "복종적인"},
-        {"temperament": "폭발적인", "character": "모방하는"},
-        {"temperament": "고립되고 겁이 많은", "character": "감정적인"}
-    ]
-    
     instructions = []
-    for combo in selected_combinations:
-        # 선택된 조합에 맞는 temperament와 character 찾기
-        t1 = [t for t in temperament if t["personality"] == combo["temperament"]][0]
-        t2 = [t for t in character if t["personality"] == combo["character"]][0]
-        
-        input_parts = user_input.split(',')
-        name = input_parts[0].strip() if len(input_parts) > 0 else ''
-        age = input_parts[1].replace('년생','').strip() if len(input_parts) > 1 else ''
-        gender = input_parts[2].strip() if len(input_parts) > 2 else ''
-        symptom = input_parts[3].strip() if len(input_parts) > 3 else ''
-        d1 = t1["detail"]
-        d2 = t2["detail"]
-        virtual_prompt = f"""당신은 다음 조건을 가진 가상환자입니다. 이 역할을 완전히 수행해주세요.
+    for t1 in temperament:
+        for t2 in character:
+            input_parts = user_input.split(',')
+            name = input_parts[0].strip() if len(input_parts) > 0 else ''
+            age = input_parts[1].replace('년생','').strip() if len(input_parts) > 1 else ''
+            gender = input_parts[2].strip() if len(input_parts) > 2 else ''
+            symptom = input_parts[3].strip() if len(input_parts) > 3 else ''
+            d1 = t1["detail"]
+            d2 = t2["detail"]
+            virtual_prompt = f"""당신은 다음 조건을 가진 가상환자입니다. 이 역할을 완전히 수행해주세요.
 
 환자 정보:
 - 이름: {name}
@@ -576,7 +513,7 @@ async def process_qa_batch(data: dict = Body(...)):
 - "별다른 문제는 없지만, 우울한 기분이 자주 들어요."
 
 이제 당신은 위 환자입니다. 질문에 응답하세요."""
-        instructions.append(virtual_prompt)
+            instructions.append(virtual_prompt)
             
     total = len(instructions) * len(questions)
     print(f"[Batch] 총 {len(instructions)}개 조합 × {len(questions)}개 질문 = {total}개 요청")
@@ -595,7 +532,7 @@ async def process_qa_batch(data: dict = Body(...)):
                 ]
                 req = {
                     "messages": messages, 
-                    "model": "gpt-4-turbo-preview",
+                    "model": "gpt-4o",
                     "custom_id": f"q{questions.index(q)}_c{instructions.index(prompt)}"
                 }
                 tmpfile.write(json.dumps(req, ensure_ascii=False) + "\n")
@@ -611,7 +548,7 @@ async def process_qa_batch(data: dict = Body(...)):
         input_file_id=batch_input_file.id,
         endpoint="/v1/chat/completions",
         completion_window="24h",
-        metadata={"description": f"실험번호 {experiment_num} 가상환자 25조합×11질문"}
+        metadata={"description": f"실험번호 {experiment_num} 가상환자 27조합×11질문"}
     )
     print(f"[Batch] Batch 작업 제출 완료: {batch.id}")
     # 7. 결과 및 메타데이터 반환
@@ -668,8 +605,8 @@ async def check_batch_status(batch_id: str):
                     "batch_id": batch_id,
                     "status": "completed",
                     "total_responses": len(results),
-                    "created_at": batch.created_at.isoformat() if hasattr(batch, 'created_at') and batch.created_at else None,
-                    "completed_at": batch.completed_at.isoformat() if hasattr(batch, 'completed_at') and batch.completed_at else None,
+                    "created_at": batch.created_at.isoformat() if batch.created_at else None,
+                    "completed_at": batch.completed_at.isoformat() if batch.completed_at else None,
                     "history": []
                 }
                 
@@ -678,49 +615,20 @@ async def check_batch_status(batch_id: str):
                 with open(questions_file, "r", encoding="utf-8") as f:
                     questions = json.load(f)
                 
-                # 25개 조합 (사용자가 선택한 특정 조합들)
-                total_combinations = 25
+                # 36개 조합 (4개 temperament × 9개 character)
+                total_combinations = 36
                 responses_per_question = total_combinations
-                
-                # 사용자가 선택한 25개 조합 정의
-                selected_combinations = [
-                    {"temperament": "고립되고 겁이 많은", "character": "미성숙한"},
-                    {"temperament": "폭발적인", "character": "비논리적인"},
-                    {"temperament": "고립되고 겁이 많은", "character": "의존적인"},
-                    {"temperament": "민감한", "character": "모방하는"},
-                    {"temperament": "폭발적인", "character": "미성숙한"},
-                    {"temperament": "유연한", "character": "감정적인"},
-                    {"temperament": "민감한", "character": "비논리적인"},
-                    {"temperament": "폭발적인", "character": "의존적인"},
-                    {"temperament": "유연한", "character": "미성숙한"},
-                    {"temperament": "고립되고 겁이 많은", "character": "비조직화된"},
-                    {"temperament": "민감한", "character": "감정적인"},
-                    {"temperament": "민감한", "character": "비조직화된"},
-                    {"temperament": "폭발적인", "character": "감정적인"},
-                    {"temperament": "고립되고 겁이 많은", "character": "모방하는"},
-                    {"temperament": "유연한", "character": "비논리적인"},
-                    {"temperament": "폭발적인", "character": "침울한"},
-                    {"temperament": "유연한", "character": "비조직화된"},
-                    {"temperament": "고립되고 겁이 많은", "character": "복종적인"},
-                    {"temperament": "유연한", "character": "복종적인"},
-                    {"temperament": "폭발적인", "character": "비조직화된"},
-                    {"temperament": "민감한", "character": "침울한"},
-                    {"temperament": "민감한", "character": "의존적인"},
-                    {"temperament": "민감한", "character": "복종적인"},
-                    {"temperament": "폭발적인", "character": "모방하는"},
-                    {"temperament": "고립되고 겁이 많은", "character": "감정적인"}
-                ]
                 
                 # 각 질문에 대해 answers 배열 생성
                 for question_idx, question in enumerate(questions):
                     question_data = {
-                        "timestamp": batch.completed_at.isoformat() if hasattr(batch, 'completed_at') and batch.completed_at else datetime.now().isoformat(),
+                        "timestamp": batch.completed_at.isoformat() if batch.completed_at else datetime.now().isoformat(),
                         "user_input": "Batch API 응답",
                         "question_text": question["text"],
                         "answers": []
                     }
                     
-                    # 해당 질문에 대한 25개 응답 수집
+                    # 해당 질문에 대한 36개 응답 수집
                     start_idx = question_idx * responses_per_question
                     end_idx = start_idx + responses_per_question
                     
@@ -729,20 +637,18 @@ async def check_batch_status(batch_id: str):
                             result = results[response_idx]
                             answer_content = result.get("response", {}).get("choices", [{}])[0].get("message", {}).get("content", "")
                             
-                            # 조합 인덱스 계산 (0-24)
+                            # 조합 인덱스 계산 (0-35)
                             combination_idx = response_idx % total_combinations
-                            
-                            # 선택된 조합 사용
-                            selected_combo = selected_combinations[combination_idx]
+                            temperament_idx = combination_idx // 9
+                            character_idx = combination_idx % 9
                             
                             # personality.json에서 실제 조합 정보 가져오기
                             personality_file = os.path.join("responses", "personality.json")
                             with open(personality_file, "r", encoding="utf-8") as f:
                                 personality_data = json.load(f)
                             
-                            # 선택된 조합에 맞는 temperament와 character 찾기
-                            temperament_data = [t for t in personality_data if t["type"] == "temperament" and t["personality"] == selected_combo["temperament"]][0]
-                            character_data = [t for t in personality_data if t["type"] == "character" and t["personality"] == selected_combo["character"]][0]
+                            temperament_data = [t for t in personality_data if t["type"] == "temperament"][temperament_idx]
+                            character_data = [t for t in personality_data if t["type"] == "character"][character_idx]
                             
                             answer_data = {
                                 "type": "personality+character",
@@ -750,7 +656,7 @@ async def check_batch_status(batch_id: str):
                                     "temperament": temperament_data["detail"],
                                     "character": character_data["detail"]
                                 },
-                                "personality": f"{temperament_data.get('personality', '')}, {character_data.get('personality', '')}",
+                                "personality": f"{temperament_data.get('description', '')}, {character_data.get('description', '')}",
                                 "answer": answer_content,
                                 "status": "completed"
                             }
@@ -776,8 +682,8 @@ async def check_batch_status(batch_id: str):
                     "batch_info": {
                         "id": batch.id,
                         "status": batch.status,
-                        "created_at": batch.created_at.isoformat() if hasattr(batch, 'created_at') and batch.created_at else None,
-                        "completed_at": batch.completed_at.isoformat() if hasattr(batch, 'completed_at') and batch.completed_at else None
+                        "created_at": batch.created_at.isoformat() if batch.created_at else None,
+                        "completed_at": batch.completed_at.isoformat() if batch.completed_at else None
                     }
                 }
             else:
@@ -797,7 +703,7 @@ async def check_batch_status(batch_id: str):
                 "batch_info": {
                     "id": batch.id,
                     "status": batch.status,
-                    "created_at": batch.created_at.isoformat() if hasattr(batch, 'created_at') and batch.created_at else None
+                    "created_at": batch.created_at.isoformat() if batch.created_at else None
                 }
             }
             

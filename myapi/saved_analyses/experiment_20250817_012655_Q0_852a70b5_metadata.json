@@ -1,0 +1,13 @@
+{
+  "analysis_id": "experiment_20250817_012655_Q0",
+  "experiment_name": "experiment_20250817_012655",
+  "question_index": 0,
+  "data_hash": "852a70b5",
+  "created_at": "2025-08-17T01:28:31.514061",
+  "summary": {
+    "has_radar": false,
+    "has_heatmap": false,
+    "has_sorting": false,
+    "has_structured": true
+  }
+}
